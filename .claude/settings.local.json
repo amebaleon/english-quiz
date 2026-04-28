@@ -1,0 +1,9 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(dir \"C:\\\\Users\\\\windo\\\\OneDrive\\\\바탕 화면\\\\godti\")",
+      "Bash(npm --version)",
+      "Bash(command -v node)"
+    ]
+  }
+}
