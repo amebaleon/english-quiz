@@ -33,6 +33,8 @@ export default function QuizEditorModal({ quiz, onClose, onTitleUpdated }: Props
   const [error, setError] = useState('')
   const [titleEdit, setTitleEdit] = useState(false)
   const [newTitle, setNewTitle] = useState(quiz.title)
+  const [importing, setImporting] = useState(false)
+  const [importResult, setImportResult] = useState<{ imported: number; errors: string[] } | null>(null)
 
   useEffect(() => { loadQuestions() }, [quiz.id])
 
@@ -93,6 +95,23 @@ export default function QuizEditorModal({ quiz, onClose, onTitleUpdated }: Props
     setQuestions(prev => prev.filter(x => x.id !== q.id))
   }
 
+  async function handleImport(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0]
+    if (!file) return
+    e.target.value = ''
+    setImporting(true)
+    setImportResult(null)
+    setError('')
+    const formData = new FormData()
+    formData.append('file', file)
+    const res = await fetch(`/api/teacher/quizzes/${quiz.id}/import`, { method: 'POST', body: formData })
+    const json = await res.json()
+    setImporting(false)
+    if (!json.success) { setError(json.error); return }
+    setImportResult({ imported: json.imported, errors: json.errors })
+    if (json.imported > 0) loadQuestions()
+  }
+
   async function handleMoveQuestion(q: Question, dir: -1 | 1) {
     const idx = questions.findIndex(x => x.id === q.id)
     const swapIdx = idx + dir
@@ -145,9 +164,24 @@ export default function QuizEditorModal({ quiz, onClose, onTitleUpdated }: Props
           </div>
         )}
         <span className="text-sm text-gray-400">{questions.length}문제</span>
+        <label className={`px-3 py-1.5 text-sm border border-gray-300 rounded-xl cursor-pointer hover:bg-gray-50 transition-colors text-gray-600 font-medium ${importing ? 'opacity-50 pointer-events-none' : ''}`}>
+          {importing ? '업로드 중...' : '엑셀 업로드'}
+          <input type="file" accept=".xlsx,.xls" className="hidden" onChange={handleImport} disabled={importing} />
+        </label>
       </div>
 
       {error && <p className="text-red-500 text-sm bg-red-50 rounded-xl px-4 py-3 mb-4">{error}</p>}
+
+      {importResult && (
+        <div className={`text-sm rounded-xl px-4 py-3 mb-4 ${importResult.imported > 0 ? 'bg-emerald-50 text-emerald-700' : 'bg-gray-50 text-gray-600'}`}>
+          <p className="font-medium mb-1">{importResult.imported}문제 추가됨</p>
+          {importResult.errors.length > 0 && (
+            <ul className="text-xs text-red-500 space-y-0.5 mt-2">
+              {importResult.errors.map((e, i) => <li key={i}>⚠ {e}</li>)}
+            </ul>
+          )}
+        </div>
+      )}
 
       {panel === 'list' && (
         <>
