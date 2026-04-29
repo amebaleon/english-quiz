@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient, createServiceClient } from '@/lib/supabase/server'
+import { cleanupStudentPoints } from '@/lib/utils/cleanup'
 
 // 주관식 수동 채점 + 포인트 지급
 export async function POST(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
@@ -27,6 +28,7 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
         delta: points,
         reason: `퀴즈 정답 (세션)`,
       })
+      cleanupStudentPoints(service, student_id).catch(() => {})
     }
 
     return NextResponse.json({ success: true })

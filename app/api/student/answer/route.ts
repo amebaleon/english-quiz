@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createServiceClient } from '@/lib/supabase/server'
 import { cookies } from 'next/headers'
+import { cleanupStudentAnswers } from '@/lib/utils/cleanup'
 
 export async function POST(request: NextRequest) {
   try {
@@ -12,6 +13,7 @@ export async function POST(request: NextRequest) {
     if (!session_id || !question_id || content === undefined || content === '') {
       return NextResponse.json({ success: false, error: '답변 내용을 입력하세요.' }, { status: 400 })
     }
+    const trimmedContent = String(content).slice(0, 300)
 
     const service = await createServiceClient()
 
@@ -30,11 +32,13 @@ export async function POST(request: NextRequest) {
       session_id,
       question_id,
       student_id: studentId,
-      content: String(content),
+      content: trimmedContent,
       is_correct: null,
     })
 
     if (error) return NextResponse.json({ success: false, error: error.message }, { status: 500 })
+
+    cleanupStudentAnswers(service, studentId).catch(() => {})
     return NextResponse.json({ success: true })
   } catch {
     return NextResponse.json({ success: false, error: '서버 오류' }, { status: 500 })

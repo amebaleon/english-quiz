@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient, createServiceClient } from '@/lib/supabase/server'
+import { cleanupStudentPoints } from '@/lib/utils/cleanup'
 
 // 객관식 정답자 일괄 포인트 지급
 export async function POST(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
@@ -45,6 +46,7 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
           reason: '퀴즈 정답',
         }))
       )
+      correctAnswers.forEach(a => cleanupStudentPoints(service, a.student_id).catch(() => {}))
     }
 
     return NextResponse.json({ success: true, data: { correct: correctAnswers.length } })

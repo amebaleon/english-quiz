@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient, createServiceClient } from '@/lib/supabase/server'
+import { cleanupStudentPoints } from '@/lib/utils/cleanup'
 
 // 포인트 수동 조정
 export async function POST(request: NextRequest) {
@@ -18,6 +19,8 @@ export async function POST(request: NextRequest) {
     const { error } = await service.from('points_history').insert({ student_id, delta, reason: reason.trim() })
 
     if (error) return NextResponse.json({ success: false, error: error.message }, { status: 500 })
+
+    cleanupStudentPoints(service, student_id).catch(() => {})
     return NextResponse.json({ success: true })
   } catch {
     return NextResponse.json({ success: false, error: '서버 오류' }, { status: 500 })
