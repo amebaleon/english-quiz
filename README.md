@@ -1,36 +1,79 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# 영어 학원 퀴즈 앱
 
-## Getting Started
+영어 학원 수업용 실시간 퀴즈 플랫폼입니다. 선생님이 세션을 열면 학생들이 스마트폰으로 코드를 입력해 실시간으로 퀴즈에 참여합니다.
 
-First, run the development server:
+## 주요 기능
+
+### 선생님
+- **학생 관리**: 학생 이름·반·PIN 등록, 엑셀 파일 일괄 업로드/다운로드
+- **퀴즈 관리**: 객관식·주관식 문제 추가, 엑셀 업로드, 미리보기, 복제
+- **세션 진행**: 퀴즈 선택 → 6자리 코드 + QR코드 생성 → 문제별 진행·건너뛰기·정답 공개
+- **결과 확인**: 세션별 참가자 정답률·점수 조회, 엑셀 저장
+- **대시보드**: 전체 학생 수, 퀴즈 수, 최근 세션 목록 및 상세 결과
+
+### 학생
+- PIN 4자리로 로그인 (5회 실패 시 15분 잠금)
+- 6자리 코드 또는 QR코드로 세션 입장
+- 실시간으로 문제 수신 및 답변 제출
+- 세션 종료 후 순위 및 내 결과 확인
+- 누적 포인트 및 답변 이력 조회
+
+## 퀴즈 엑셀 업로드 형식
+
+| 열 | 내용 |
+|----|------|
+| A | 문제 내용 |
+| B | 보기1 (주관식이면 정답) |
+| C | 보기2 |
+| D | 보기3 |
+| E | 보기4 |
+| F | 정답 번호 (1~4, 주관식이면 비워둠) |
+| G | 점수 (예: 10) |
+
+- F열이 비어 있으면 주관식, 숫자가 있으면 객관식으로 처리됩니다.
+- 첫 행은 헤더로 자동 건너뜁니다.
+
+## 학생 엑셀 업로드 형식
+
+| 열 | 내용 |
+|----|------|
+| A | 이름 |
+| B | 반 (선택) |
+| C | PIN (4자리 숫자) |
+
+## 로컬 개발
 
 ```bash
+npm install
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+`.env.local` 파일에 아래 항목이 필요합니다.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+```
+NEXT_PUBLIC_SUPABASE_URL=...
+NEXT_PUBLIC_SUPABASE_ANON_KEY=...
+SUPABASE_SERVICE_ROLE_KEY=...
+```
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+## 기술 스택
 
-## Learn More
+- **프레임워크**: Next.js (App Router, Turbopack)
+- **데이터베이스**: Supabase (PostgreSQL + Realtime)
+- **인증**: Supabase Auth (선생님), httpOnly 쿠키 + bcrypt PIN (학생)
+- **엑셀**: xlsx 라이브러리
+- **배포**: Vercel
 
-To learn more about Next.js, take a look at the following resources:
+## 세션 흐름
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+```
+세션 생성 → 대기(waiting) → 문제 출제(question) → 정답 공개(revealed) → [반복] → 종료(finished)
+```
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+선생님이 문제를 출제하면 학생 화면에 즉시 표시됩니다 (Supabase Realtime). 정답 공개 후 다음 문제로 넘어가거나 건너뛸 수 있습니다.
 
-## Deploy on Vercel
+## 데이터 정리
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+- 학생 1인당 답변은 최대 100개, 포인트 기록은 최대 200개 보관 후 자동 삭제
+- 답변 내용은 최대 300자
+- 오래된 `waiting` 상태 세션은 대시보드 접속 시 자동 정리

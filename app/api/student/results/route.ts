@@ -14,13 +14,14 @@ export async function GET(request: NextRequest) {
 
     const service = createServiceClient()
 
+    const { data: sessionData } = await service.from('sessions').select('quiz_id').eq('id', session_id).single()
+    const quizId = sessionData?.quiz_id ?? ''
+
     // 참가자별 정답 수, 획득 포인트 집계
     const [{ data: participants }, { data: answers }, { data: questions }] = await Promise.all([
       service.from('session_participants').select('student_id, users(name)').eq('session_id', session_id),
       service.from('answers').select('student_id, is_correct, question_id').eq('session_id', session_id),
-      service.from('questions').select('id, points').eq('quiz_id',
-        (await service.from('sessions').select('quiz_id').eq('id', session_id).single()).data?.quiz_id ?? ''
-      ),
+      service.from('questions').select('id, points').eq('quiz_id', quizId),
     ])
 
     const pointsMap = Object.fromEntries((questions ?? []).map(q => [q.id, q.points]))

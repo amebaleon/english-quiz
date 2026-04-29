@@ -64,6 +64,16 @@ function QuizContent() {
     loadQuizData()
   }, [loadQuizData])
 
+  // 세션 종료 시 결과 fetch
+  useEffect(() => {
+    if (data?.session.status === 'finished' && sessionId && !results) {
+      fetch(`/api/student/results?session_id=${sessionId}`)
+        .then(r => r.json())
+        .then(json => { if (json.success) setResults(json.data) })
+        .catch(() => setResults([]))
+    }
+  }, [data?.session.status, sessionId, results])
+
   // Realtime: 세션 상태 변화 구독
   useEffect(() => {
     if (!sessionId) return
@@ -150,12 +160,6 @@ function QuizContent() {
 
   // 세션 종료
   if (data.session.status === 'finished') {
-    if (!results) {
-      fetch(`/api/student/results?session_id=${sessionId}`)
-        .then(r => r.json())
-        .then(json => { if (json.success) setResults(json.data) })
-        .catch(() => setResults([]))
-    }
     const me = results?.find(r => r.isMe)
     const myRank = results ? results.findIndex(r => r.isMe) + 1 : 0
     return (
