@@ -96,24 +96,23 @@ export default function SessionClient({ quizzes, initialSession }: Props) {
       schema: 'public',
       table: 'answers',
       filter: `session_id=eq.${sessionId}`,
-    }, (payload) => {
+    }, async (payload) => {
+      const { data: user } = await supabase
+        .from('users')
+        .select('name')
+        .eq('id', payload.new.student_id)
+        .single()
+
       setAnswers(prev => {
-        const exists = prev.some(a => a.id === payload.new.id)
-        if (exists) return prev
-        // 학생 이름 없이 일단 추가, 이후 fetch로 갱신
-        const newAnswer: Answer = {
+        if (prev.some(a => a.id === payload.new.id)) return prev
+        return [...prev, {
           id: payload.new.id,
           content: payload.new.content,
           is_correct: payload.new.is_correct,
           student_id: payload.new.student_id,
-          users: null,
-        }
-        return [...prev, newAnswer]
+          users: user ?? null,
+        }]
       })
-      // 이름 포함 갱신
-      if (currentQ) {
-        setTimeout(() => loadAnswers(sessionId, currentQ.id), 300)
-      }
     })
 
     // 채점 업데이트
@@ -130,7 +129,7 @@ export default function SessionClient({ quizzes, initialSession }: Props) {
 
     ch.subscribe()
     channelRef.current = ch
-  }, [supabase, loadParticipants, loadAnswers, currentQ])
+  }, [supabase, loadParticipants, loadAnswers])
 
   // 초기 세션 복원
   useEffect(() => {

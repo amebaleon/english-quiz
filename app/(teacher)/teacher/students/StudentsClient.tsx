@@ -51,6 +51,7 @@ export default function StudentsClient({ initialStudents, initialClasses }: Prop
     fetch('/api/teacher/students')
       .then(r => r.json())
       .then(json => { if (json.success) setStudents(json.data) })
+      .catch(() => showToast('학생 목록을 불러오지 못했습니다.', 'error'))
   }
 
   async function handleDelete(student: Student) {

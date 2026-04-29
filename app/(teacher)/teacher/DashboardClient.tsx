@@ -53,17 +53,22 @@ const statusColor: Record<string, string> = {
 export default function DashboardClient({ studentCount, quizCount, recentSessions }: Props) {
   const [detail, setDetail] = useState<SessionDetail | null>(null)
   const [loading, setLoading] = useState(false)
+  const detailCache = useState<Record<string, SessionDetail>>(() => ({}))[0]
 
   useEffect(() => {
     fetch('/api/teacher/sessions/cleanup', { method: 'DELETE' }).catch(() => {})
   }, [])
 
   async function openDetail(sessionId: string) {
+    if (detailCache[sessionId]) { setDetail(detailCache[sessionId]); return }
     setLoading(true)
     setDetail(null)
     const res = await fetch(`/api/teacher/sessions/${sessionId}/detail`)
     const json = await res.json()
-    if (json.success) setDetail(json.data)
+    if (json.success) {
+      detailCache[sessionId] = json.data
+      setDetail(json.data)
+    }
     setLoading(false)
   }
 

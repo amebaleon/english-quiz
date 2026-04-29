@@ -26,26 +26,35 @@ function QuizContent() {
   const [submitting, setSubmitting] = useState(false)
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(true)
+  const [timedOut, setTimedOut] = useState(false)
   const supabase = createClient()
   const channelRef = useRef<ReturnType<typeof supabase.channel> | null>(null)
   const currentQIdRef = useRef<string | null>(null)
 
   const loadQuizData = useCallback(async () => {
     if (!sessionId) return
-    const res = await fetch(`/api/student/quiz?session_id=${sessionId}`)
-    const json = await res.json()
-    if (json.success) {
-      setData(json.data)
-      const q = json.data.question
-      const myAns = json.data.myAnswer
-      if (q && q.id !== currentQIdRef.current) {
-        currentQIdRef.current = q.id
-        setSubmitted(!!myAns)
-        setInput('')
-        setError('')
-      } else if (myAns) {
-        setSubmitted(true)
+    setTimedOut(false)
+    const timeout = setTimeout(() => setTimedOut(true), 10000)
+    try {
+      const res = await fetch(`/api/student/quiz?session_id=${sessionId}`)
+      clearTimeout(timeout)
+      const json = await res.json()
+      if (json.success) {
+        setData(json.data)
+        const q = json.data.question
+        const myAns = json.data.myAnswer
+        if (q && q.id !== currentQIdRef.current) {
+          currentQIdRef.current = q.id
+          setSubmitted(!!myAns)
+          setInput('')
+          setError('')
+        } else if (myAns) {
+          setSubmitted(true)
+        }
       }
+    } catch {
+      clearTimeout(timeout)
+      setTimedOut(true)
     }
     setLoading(false)
   }, [sessionId])
@@ -108,8 +117,21 @@ function QuizContent() {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-emerald-50">
-        <p className="text-gray-400 text-lg">불러오는 중...</p>
+      <div className="min-h-screen flex flex-col items-center justify-center bg-emerald-50 gap-4">
+        {timedOut ? (
+          <>
+            <p className="text-gray-500 text-lg">연결이 느립니다</p>
+            <p className="text-gray-400 text-sm">인터넷 연결을 확인해주세요</p>
+            <button
+              onClick={() => { setLoading(true); loadQuizData() }}
+              className="px-6 py-3 bg-emerald-500 text-white font-semibold rounded-2xl"
+            >
+              다시 시도
+            </button>
+          </>
+        ) : (
+          <p className="text-gray-400 text-lg animate-pulse">불러오는 중...</p>
+        )}
       </div>
     )
   }
