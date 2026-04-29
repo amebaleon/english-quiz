@@ -1,0 +1,252 @@
+'use client'
+
+import { useState, useEffect, useCallback, useRef, Suspense } from 'react'
+import { useSearchParams } from 'next/navigation'
+import { createClient } from '@/lib/supabase/client'
+import Link from 'next/link'
+
+interface Question {
+  id: string; type: 'multiple' | 'short'
+  content: string; options: string[] | null
+  points: number; order_index: number
+}
+interface MyAnswer { id: string; content: string; is_correct: boolean | null }
+interface SessionData {
+  session: { id: string; status: string; current_question_index: number }
+  question: Question | null
+  myAnswer: MyAnswer | null
+}
+
+function QuizContent() {
+  const searchParams = useSearchParams()
+  const sessionId = searchParams.get('session')
+  const [data, setData] = useState<SessionData | null>(null)
+  const [input, setInput] = useState('')
+  const [submitted, setSubmitted] = useState(false)
+  const [submitting, setSubmitting] = useState(false)
+  const [error, setError] = useState('')
+  const [loading, setLoading] = useState(true)
+  const supabase = createClient()
+  const channelRef = useRef<ReturnType<typeof supabase.channel> | null>(null)
+  const currentQIdRef = useRef<string | null>(null)
+
+  const loadQuizData = useCallback(async () => {
+    if (!sessionId) return
+    const res = await fetch(`/api/student/quiz?session_id=${sessionId}`)
+    const json = await res.json()
+    if (json.success) {
+      setData(json.data)
+      const q = json.data.question
+      const myAns = json.data.myAnswer
+      if (q && q.id !== currentQIdRef.current) {
+        currentQIdRef.current = q.id
+        setSubmitted(!!myAns)
+        setInput('')
+        setError('')
+      } else if (myAns) {
+        setSubmitted(true)
+      }
+    }
+    setLoading(false)
+  }, [sessionId])
+
+  useEffect(() => {
+    loadQuizData()
+  }, [loadQuizData])
+
+  // Realtime: 세션 상태 변화 구독
+  useEffect(() => {
+    if (!sessionId) return
+    if (channelRef.current) supabase.removeChannel(channelRef.current)
+
+    const ch = supabase
+      .channel(`student-session:${sessionId}`)
+      .on('postgres_changes', {
+        event: 'UPDATE',
+        schema: 'public',
+        table: 'sessions',
+        filter: `id=eq.${sessionId}`,
+      }, () => {
+        loadQuizData()
+      })
+      .subscribe()
+
+    channelRef.current = ch
+    return () => { supabase.removeChannel(ch) }
+  }, [sessionId, supabase, loadQuizData])
+
+  async function handleSubmit(answer: string) {
+    if (!data?.question || submitting) return
+    setSubmitting(true)
+    setError('')
+
+    const res = await fetch('/api/student/answer', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        session_id: sessionId,
+        question_id: data.question.id,
+        content: answer,
+      }),
+    })
+    const json = await res.json()
+    setSubmitting(false)
+    if (!json.success) { setError(json.error); return }
+    setSubmitted(true)
+  }
+
+  if (!sessionId) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-emerald-50 p-6">
+        <div className="text-center">
+          <p className="text-gray-500 mb-4">잘못된 접근입니다.</p>
+          <Link href="/student/join" className="text-emerald-600 underline">세션 코드 입력으로</Link>
+        </div>
+      </div>
+    )
+  }
+
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-emerald-50">
+        <p className="text-gray-400 text-lg">불러오는 중...</p>
+      </div>
+    )
+  }
+
+  // 세션 대기 중
+  if (!data || data.session.status === 'waiting' || data.session.current_question_index < 0) {
+    return (
+      <div className="min-h-screen flex flex-col items-center justify-center bg-emerald-50 p-6 safe-top safe-bottom text-center">
+        <div className="text-6xl mb-6 animate-pulse">⏳</div>
+        <h2 className="text-2xl font-bold text-gray-800 mb-2">선생님을 기다리는 중</h2>
+        <p className="text-gray-500">퀴즈가 곧 시작됩니다!</p>
+      </div>
+    )
+  }
+
+  // 세션 종료
+  if (data.session.status === 'finished') {
+    return (
+      <div className="min-h-screen flex flex-col items-center justify-center bg-emerald-50 p-6 safe-top safe-bottom text-center">
+        <div className="text-6xl mb-6">🎉</div>
+        <h2 className="text-2xl font-bold text-gray-800 mb-2">퀴즈 종료!</h2>
+        <p className="text-gray-500 mb-8">수고했어요!</p>
+        <Link
+          href="/student/profile"
+          className="px-6 py-3 bg-emerald-500 text-white font-bold rounded-2xl"
+        >
+          내 포인트 확인
+        </Link>
+      </div>
+    )
+  }
+
+  const q = data.question
+  if (!q) {
+    return (
+      <div className="min-h-screen flex flex-col items-center justify-center bg-emerald-50 p-6">
+        <div className="animate-pulse text-5xl mb-4">⏳</div>
+        <p className="text-gray-500">다음 문제를 기다리는 중...</p>
+      </div>
+    )
+  }
+
+  // 제출 완료 대기 화면
+  if (submitted) {
+    return (
+      <div className="min-h-screen flex flex-col items-center justify-center bg-emerald-50 p-6 safe-top safe-bottom text-center">
+        <div className="text-6xl mb-6">✅</div>
+        <h2 className="text-2xl font-bold text-gray-800 mb-2">제출 완료!</h2>
+        <p className="text-gray-500 mb-6">선생님의 채점을 기다리세요</p>
+        <div className="bg-white rounded-2xl border border-gray-200 px-6 py-4 max-w-xs w-full">
+          <p className="text-xs text-gray-400 mb-1">{data.session.current_question_index + 1}번 문제</p>
+          <p className="text-gray-700 font-medium text-sm leading-relaxed">{q.content}</p>
+          <p className="mt-3 text-indigo-600 font-semibold text-sm">
+            내 답변: {q.type === 'multiple' && q.options
+              ? q.options[parseInt(data.myAnswer?.content ?? input)] ?? data.myAnswer?.content ?? input
+              : data.myAnswer?.content ?? input}
+          </p>
+        </div>
+        <p className="text-gray-300 text-sm mt-8 animate-pulse">다음 문제를 기다리는 중...</p>
+      </div>
+    )
+  }
+
+  // 문제 화면
+  return (
+    <div className="min-h-screen flex flex-col bg-white safe-top safe-bottom">
+      {/* 헤더 */}
+      <div className="bg-emerald-500 text-white px-6 py-4">
+        <div className="flex items-center justify-between">
+          <span className="text-emerald-100 text-sm">문제 {data.session.current_question_index + 1}</span>
+          <span className="bg-emerald-600 text-white text-xs font-bold px-3 py-1 rounded-full">
+            {q.points}P
+          </span>
+        </div>
+      </div>
+
+      {/* 문제 내용 */}
+      <div className="px-6 py-6 flex-1 flex flex-col">
+        <div className="bg-gray-50 rounded-2xl p-5 mb-6">
+          <p className="text-xl font-bold text-gray-800 leading-relaxed">{q.content}</p>
+        </div>
+
+        {error && (
+          <p className="text-red-500 text-sm bg-red-50 rounded-xl px-4 py-3 mb-4">{error}</p>
+        )}
+
+        {/* 객관식 */}
+        {q.type === 'multiple' && q.options && (
+          <div className="space-y-3 flex-1">
+            {q.options.map((opt, i) => (
+              <button
+                key={i}
+                onClick={() => handleSubmit(String(i))}
+                disabled={submitting}
+                className="w-full flex items-center gap-4 p-5 bg-white border-2 border-gray-200 hover:border-emerald-400 hover:bg-emerald-50 active:bg-emerald-100 rounded-2xl transition-colors text-left disabled:opacity-60"
+              >
+                <span className="w-10 h-10 rounded-full bg-emerald-100 text-emerald-600 font-bold flex items-center justify-center shrink-0 text-lg">
+                  {i + 1}
+                </span>
+                <span className="text-gray-800 font-medium text-lg">{opt}</span>
+              </button>
+            ))}
+          </div>
+        )}
+
+        {/* 주관식 */}
+        {q.type === 'short' && (
+          <div className="flex-1 flex flex-col">
+            <textarea
+              value={input}
+              onChange={e => setInput(e.target.value)}
+              placeholder="답을 입력하세요..."
+              rows={4}
+              className="w-full flex-1 px-5 py-4 border-2 border-gray-200 rounded-2xl focus:outline-none focus:border-emerald-400 text-gray-800 text-lg resize-none"
+            />
+            <button
+              onClick={() => handleSubmit(input)}
+              disabled={!input.trim() || submitting}
+              className="mt-4 w-full py-5 bg-emerald-500 hover:bg-emerald-600 disabled:bg-gray-200 disabled:text-gray-400 text-white font-bold text-xl rounded-2xl transition-colors"
+            >
+              {submitting ? '제출 중...' : '제출하기'}
+            </button>
+          </div>
+        )}
+      </div>
+    </div>
+  )
+}
+
+export default function QuizPage() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen flex items-center justify-center bg-emerald-50">
+        <p className="text-gray-400">불러오는 중...</p>
+      </div>
+    }>
+      <QuizContent />
+    </Suspense>
+  )
+}

@@ -1,0 +1,32 @@
+{
+  "name": "영어퀴즈",
+  "short_name": "영어퀴즈",
+  "description": "영어학원 실시간 퀴즈 앱",
+  "start_url": "/student/login",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#10B981",
+  "theme_color": "#10B981",
+  "lang": "ko",
+  "icons": [
+    {
+      "src": "/icons/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/icons/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "세션 입장",
+      "url": "/student/join",
+      "description": "퀴즈 세션 코드 입력"
+    }
+  ]
+}
