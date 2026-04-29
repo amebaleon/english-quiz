@@ -206,9 +206,14 @@ export default function SessionClient({ quizzes, initialSession }: Props) {
           points: currentQ.points,
         }),
       })
-      // 최신 채점 결과 로드
       await loadAnswers(session.id, currentQ.id)
     }
+
+    await fetch(`/api/teacher/sessions/${session.id}`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ status: 'revealed' }),
+    })
 
     setPhase('revealed')
     setLoading(false)
@@ -251,7 +256,7 @@ export default function SessionClient({ quizzes, initialSession }: Props) {
     await fetch(`/api/teacher/sessions/${session.id}`, {
       method: 'PATCH',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ current_question_index: nextIdx }),
+      body: JSON.stringify({ status: 'active', current_question_index: nextIdx }),
     })
     const q = questions[nextIdx]
     setCurrentQ(q)

@@ -8,7 +8,7 @@ import Link from 'next/link'
 interface Question {
   id: string; type: 'multiple' | 'short'
   content: string; options: string[] | null
-  points: number; order_index: number
+  answer?: string; points: number; order_index: number
 }
 interface MyAnswer { id: string; content: string; is_correct: boolean | null }
 interface SessionData {
@@ -86,9 +86,13 @@ function QuizContent() {
         schema: 'public',
         table: 'sessions',
         filter: `id=eq.${sessionId}`,
-      }, () => {
-        loadQuizData()
-      })
+      }, () => loadQuizData())
+      .on('postgres_changes', {
+        event: 'UPDATE',
+        schema: 'public',
+        table: 'answers',
+        filter: `session_id=eq.${sessionId}`,
+      }, () => loadQuizData())
       .subscribe()
 
     channelRef.current = ch
@@ -154,6 +158,54 @@ function QuizContent() {
         <div className="text-6xl mb-6 animate-pulse">⏳</div>
         <h2 className="text-2xl font-bold text-gray-800 mb-2">선생님을 기다리는 중</h2>
         <p className="text-gray-500">퀴즈가 곧 시작됩니다!</p>
+      </div>
+    )
+  }
+
+  // 정답 공개 화면
+  if (data.session.status === 'revealed') {
+    const q = data.question
+    const myAns = data.myAnswer
+    const isCorrect = myAns?.is_correct
+    const notSubmitted = !myAns
+
+    let icon: string, title: string, subtitle: string, bg: string, border: string
+    if (notSubmitted) {
+      icon = '😢'; title = '미제출'; subtitle = '다음엔 꼭 답변해요!'
+      bg = 'bg-gray-50'; border = 'border-gray-200'
+    } else if (isCorrect === true) {
+      icon = '🎉'; title = '정답!'; subtitle = `+${q?.points ?? 0}P 획득`
+      bg = 'bg-emerald-50'; border = 'border-emerald-300'
+    } else if (isCorrect === false) {
+      icon = '❌'; title = '틀렸어요'; subtitle = '다음엔 잘 할 수 있어요!'
+      bg = 'bg-red-50'; border = 'border-red-200'
+    } else {
+      icon = '⏳'; title = '채점 중...'; subtitle = '선생님이 채점하고 있어요'
+      bg = 'bg-amber-50'; border = 'border-amber-200'
+    }
+
+    return (
+      <div className="min-h-screen flex flex-col items-center justify-center bg-emerald-50 p-6 safe-top safe-bottom text-center">
+        <div className={`w-full max-w-sm rounded-2xl border-2 ${border} ${bg} p-8 mb-6`}>
+          <div className="text-6xl mb-4">{icon}</div>
+          <h2 className="text-2xl font-bold text-gray-800 mb-1">{title}</h2>
+          <p className="text-gray-500 text-sm">{subtitle}</p>
+        </div>
+
+        {q?.answer && (
+          <div className="w-full max-w-sm bg-white rounded-2xl border border-gray-200 p-5">
+            <p className="text-xs font-semibold text-gray-400 uppercase mb-2">정답</p>
+            {q.type === 'multiple' && q.options ? (
+              <p className="font-bold text-emerald-600 text-lg">
+                {parseInt(q.answer) + 1}번. {q.options[parseInt(q.answer)]}
+              </p>
+            ) : (
+              <p className="font-bold text-emerald-600 text-lg">{q.answer}</p>
+            )}
+          </div>
+        )}
+
+        <p className="text-gray-300 text-sm mt-8 animate-pulse">다음 문제를 기다리는 중...</p>
       </div>
     )
   }

@@ -29,12 +29,16 @@ export async function GET(request: NextRequest) {
     if (session.current_question_index >= 0) {
       const { data: q } = await service
         .from('questions')
-        .select('id, type, content, options, points, order_index')
+        .select('id, type, content, options, answer, points, order_index')
         .eq('quiz_id', session.quiz_id)
         .eq('order_index', session.current_question_index)
         .single()
 
-      question = q
+      // 정답은 revealed 상태에서만 노출
+      question = q ? {
+        ...q,
+        answer: session.status === 'revealed' ? q.answer : undefined,
+      } : null
 
       if (q) {
         const { data: ans } = await service
