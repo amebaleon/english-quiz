@@ -286,6 +286,7 @@ export default function SessionClient({ quizzes, initialSession }: Props) {
   const qIdx = session?.current_question_index ?? -1
   const submittedCount = answers.length
   const correctCount = answers.filter(a => a.is_correct === true).length
+  const notSubmitted = participants.filter(p => !answers.some(a => a.student_id === p.student_id))
 
   // ── 렌더링 ─────────────────────────────────────────────
 
@@ -382,6 +383,18 @@ export default function SessionClient({ quizzes, initialSession }: Props) {
           <p className="text-indigo-200 text-sm font-medium mb-2">입장 코드</p>
           <p className="text-5xl font-black tracking-widest">{session?.code}</p>
           <p className="text-indigo-200 text-xs mt-3">학생에게 이 코드를 알려주세요</p>
+          {session?.code && (
+            <div className="mt-4 bg-white rounded-xl p-2 inline-block">
+              <img
+                src={`https://api.qrserver.com/v1/create-qr-code/?size=120x120&data=${encodeURIComponent(
+                  `${typeof window !== 'undefined' ? window.location.origin : ''}/student/join?code=${session.code}`
+                )}`}
+                alt="QR코드"
+                width={120}
+                height={120}
+              />
+            </div>
+          )}
         </div>
 
         {/* 진행 상태 */}
@@ -498,11 +511,16 @@ export default function SessionClient({ quizzes, initialSession }: Props) {
             <div className="bg-white rounded-2xl border border-gray-200 p-5">
               <div className="flex items-center justify-between mb-4">
                 <h4 className="font-semibold text-gray-700">답변 현황</h4>
-                {phase === 'revealed' && (
-                  <span className="text-sm font-semibold text-emerald-600">
-                    정답 {correctCount}명 / {submittedCount}명 제출
-                  </span>
-                )}
+                <div className="text-right">
+                  {phase === 'revealed' && submittedCount > 0 && (
+                    <p className="text-sm font-semibold text-emerald-600">
+                      정답 {correctCount}명 ({Math.round(correctCount / submittedCount * 100)}%) / {submittedCount}명 제출
+                    </p>
+                  )}
+                  {phase === 'question' && notSubmitted.length > 0 && (
+                    <p className="text-xs text-amber-500">미제출 {notSubmitted.length}명: {notSubmitted.map(p => (p.users as any)?.name).join(', ')}</p>
+                  )}
+                </div>
               </div>
 
               {answers.length === 0 ? (

@@ -1,15 +1,22 @@
 'use client'
 
-import { useState } from 'react'
-import { useRouter } from 'next/navigation'
+import { useState, useEffect } from 'react'
+import { useRouter, useSearchParams } from 'next/navigation'
 import Link from 'next/link'
+import { Suspense } from 'react'
 
-export default function StudentJoinPage() {
+function StudentJoinContent() {
   const router = useRouter()
+  const searchParams = useSearchParams()
   const [code, setCode] = useState('')
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
   const [shake, setShake] = useState(false)
+
+  useEffect(() => {
+    const preCode = searchParams.get('code')
+    if (preCode && /^\d{6}$/.test(preCode)) setCode(preCode)
+  }, [searchParams])
 
   function handleInput(digit: string) {
     if (code.length >= 6 || loading) return
@@ -137,5 +144,17 @@ export default function StudentJoinPage() {
         </button>
       </div>
     </main>
+  )
+}
+
+export default function StudentJoinPage() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen flex items-center justify-center bg-emerald-50">
+        <p className="text-gray-400">불러오는 중...</p>
+      </div>
+    }>
+      <StudentJoinContent />
+    </Suspense>
   )
 }

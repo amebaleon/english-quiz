@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import Tutorial from '@/components/teacher/Tutorial'
+import * as XLSX from 'xlsx'
 
 interface Session {
   id: string
@@ -58,6 +59,22 @@ export default function DashboardClient({ studentCount, quizCount, recentSession
   useEffect(() => {
     fetch('/api/teacher/sessions/cleanup', { method: 'DELETE' }).catch(() => {})
   }, [])
+
+  function exportExcel(d: SessionDetail) {
+    const rows = d.participants.map((p, i) => ({
+      순위: i + 1,
+      이름: p.name,
+      반: p.className ?? '-',
+      정답수: p.correct,
+      응답수: p.answered,
+      정답률: `${p.accuracy}%`,
+      획득포인트: p.pointsEarned,
+    }))
+    const ws = XLSX.utils.json_to_sheet(rows)
+    const wb = XLSX.utils.book_new()
+    XLSX.utils.book_append_sheet(wb, ws, '결과')
+    XLSX.writeFile(wb, `${d.session.quizTitle}_결과.xlsx`)
+  }
 
   async function openDetail(sessionId: string) {
     if (detailCache[sessionId]) { setDetail(detailCache[sessionId]); return }
@@ -150,7 +167,15 @@ export default function DashboardClient({ studentCount, quizCount, recentSession
                       코드: {detail.session.code} · {new Date(detail.session.createdAt).toLocaleDateString('ko-KR')} · 문제 {detail.session.totalQuestions}개
                     </p>
                   </div>
-                  <button onClick={() => setDetail(null)} className="text-gray-400 hover:text-gray-600 text-xl leading-none ml-4">✕</button>
+                  <div className="flex items-center gap-2 ml-4">
+                    <button
+                      onClick={() => exportExcel(detail)}
+                      className="text-xs px-3 py-1.5 bg-emerald-50 hover:bg-emerald-100 text-emerald-600 rounded-lg font-medium transition-colors"
+                    >
+                      엑셀 저장
+                    </button>
+                    <button onClick={() => setDetail(null)} className="text-gray-400 hover:text-gray-600 text-xl leading-none">✕</button>
+                  </div>
                 </div>
 
                 <div className="overflow-y-auto flex-1">

@@ -66,6 +66,14 @@ export default function QuizzesClient({ initialQuizzes }: { initialQuizzes: Quiz
     setQuizzes(prev => prev.map(q => q.id === quizId ? { ...q, title } : q))
   }
 
+  async function handleDuplicate(quiz: Quiz) {
+    const res = await fetch(`/api/teacher/quizzes/${quiz.id}/duplicate`, { method: 'POST' })
+    const json = await res.json()
+    if (!json.success) { showToast(json.error, 'error'); return }
+    setQuizzes(prev => [json.data, ...prev])
+    showToast(`"${quiz.title}" 복제 완료`)
+  }
+
   async function handlePreview(quiz: Quiz) {
     setPreviewQuiz(quiz)
     setPreviewLoading(true)
@@ -145,23 +153,17 @@ export default function QuizzesClient({ initialQuizzes }: { initialQuizzes: Quiz
                 {new Date(quiz.created_at).toLocaleDateString('ko-KR', { year: 'numeric', month: 'long', day: 'numeric' })}
               </p>
 
-              <div className="flex gap-2">
-                <button
-                  onClick={() => setEditingQuiz(quiz)}
-                  className="flex-1 py-2 bg-indigo-50 hover:bg-indigo-100 text-indigo-600 rounded-xl text-sm font-medium transition-colors"
-                >
+              <div className="flex gap-2 flex-wrap">
+                <button onClick={() => setEditingQuiz(quiz)} className="flex-1 py-2 bg-indigo-50 hover:bg-indigo-100 text-indigo-600 rounded-xl text-sm font-medium transition-colors">
                   문제 편집
                 </button>
-                <button
-                  onClick={() => handlePreview(quiz)}
-                  className="px-3 py-2 bg-gray-50 hover:bg-gray-100 text-gray-600 rounded-xl text-sm transition-colors"
-                >
+                <button onClick={() => handlePreview(quiz)} className="px-3 py-2 bg-gray-50 hover:bg-gray-100 text-gray-600 rounded-xl text-sm transition-colors">
                   미리보기
                 </button>
-                <button
-                  onClick={() => handleDelete(quiz)}
-                  className="px-3 py-2 border border-red-200 text-red-500 hover:bg-red-50 rounded-xl text-sm transition-colors"
-                >
+                <button onClick={() => handleDuplicate(quiz)} className="px-3 py-2 bg-amber-50 hover:bg-amber-100 text-amber-600 rounded-xl text-sm transition-colors">
+                  복제
+                </button>
+                <button onClick={() => handleDelete(quiz)} className="px-3 py-2 border border-red-200 text-red-500 hover:bg-red-50 rounded-xl text-sm transition-colors">
                   삭제
                 </button>
               </div>
