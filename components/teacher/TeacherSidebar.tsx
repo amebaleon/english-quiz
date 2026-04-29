@@ -9,6 +9,7 @@ const navItems = [
   { href: '/teacher/students', label: '학생 관리', icon: '👥', exact: false },
   { href: '/teacher/quizzes', label: '퀴즈 관리', icon: '📝', exact: false },
   { href: '/teacher/session', label: '세션 진행', icon: '▶️', exact: false },
+  { href: '/teacher/help', label: '도움말', icon: '❓', exact: false },
 ]
 
 export default function TeacherSidebar() {

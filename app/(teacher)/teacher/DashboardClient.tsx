@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
+import Tutorial from '@/components/teacher/Tutorial'
 
 interface Session {
   id: string
@@ -68,6 +69,7 @@ export default function DashboardClient({ studentCount, quizCount, recentSession
 
   return (
     <div className="p-8">
+      <Tutorial />
       <h2 className="text-2xl font-bold text-gray-800 mb-6">대시보드</h2>
 
       {/* 통계 카드 */}

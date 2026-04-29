@@ -23,6 +23,7 @@ export default function StudentLoginPage() {
   const [step, setStep] = useState<Step>('select')
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
+  const [showHelp, setShowHelp] = useState(false)
   const pinRef = useRef<HTMLInputElement>(null)
 
   useEffect(() => {
@@ -155,12 +156,68 @@ export default function StudentLoginPage() {
   return (
     <main className="min-h-screen flex flex-col bg-white safe-top safe-bottom">
       <div className="bg-emerald-500 text-white px-6 pt-8 pb-6">
-        <Link href="/" className="text-emerald-100 text-sm hover:underline block mb-4">
-          ← 처음으로
-        </Link>
+        <div className="flex items-center justify-between mb-4">
+          <Link href="/" className="text-emerald-100 text-sm hover:underline">
+            ← 처음으로
+          </Link>
+          <button
+            onClick={() => setShowHelp(true)}
+            className="text-emerald-100 text-sm bg-emerald-600/40 px-3 py-1 rounded-full hover:bg-emerald-600/60"
+          >
+            ❓ 도움말
+          </button>
+        </div>
         <h1 className="text-2xl font-bold">학생 로그인</h1>
         <p className="text-emerald-100 text-sm mt-1">이름을 선택하세요</p>
       </div>
+
+      {showHelp && (
+        <div className="fixed inset-0 bg-black/50 flex items-end sm:items-center justify-center z-50 p-4" onClick={() => setShowHelp(false)}>
+          <div className="bg-white rounded-3xl w-full max-w-sm overflow-hidden" onClick={e => e.stopPropagation()}>
+            <div className="px-6 py-5 border-b border-gray-100 flex items-center justify-between">
+              <h3 className="font-bold text-gray-800">사용 도움말</h3>
+              <button onClick={() => setShowHelp(false)} className="text-gray-400 text-xl leading-none">✕</button>
+            </div>
+            <div className="p-6 space-y-4 text-sm text-gray-700">
+              <div>
+                <p className="font-semibold mb-1">📋 사용 순서</p>
+                <ol className="list-decimal pl-5 space-y-1 text-gray-600">
+                  <li>내 이름을 찾아서 선택</li>
+                  <li>PIN(4자리 비밀번호) 입력</li>
+                  <li>선생님이 알려준 6자리 코드 입력</li>
+                  <li>문제 풀기!</li>
+                </ol>
+              </div>
+
+              <div className="bg-amber-50 rounded-xl p-4">
+                <p className="font-semibold text-amber-700 mb-2">🤔 안 되는 게 있어요</p>
+                <ul className="space-y-2 text-amber-800">
+                  <li><strong>내 이름이 없어요</strong><br/>→ 선생님께 말씀드리기</li>
+                  <li><strong>PIN이 기억 안 나요</strong><br/>→ 선생님께 PIN 다시 정해달라고 하기</li>
+                  <li><strong>PIN 5번 틀려서 잠겼어요</strong><br/>→ 15분 기다리거나 선생님께 풀어달라고 하기</li>
+                  <li><strong>코드를 넣어도 안 들어가져요</strong><br/>→ 선생님이 세션을 시작했는지, 코드가 맞는지 확인</li>
+                  <li><strong>답이 안 보내져요</strong><br/>→ 인터넷 연결 확인 후 화면 새로고침</li>
+                </ul>
+              </div>
+
+              <div className="bg-emerald-50 rounded-xl p-4 text-emerald-800">
+                <p className="font-semibold mb-1">💡 알아두기</p>
+                <ul className="space-y-1 text-xs">
+                  <li>• 한 문제는 한 번만 답할 수 있어요</li>
+                  <li>• 답을 낸 후엔 다음 문제까지 기다려야 해요</li>
+                  <li>• 정답을 맞히면 포인트가 쌓여요</li>
+                </ul>
+              </div>
+            </div>
+            <button
+              onClick={() => setShowHelp(false)}
+              className="w-full py-4 bg-emerald-500 hover:bg-emerald-600 text-white font-semibold transition-colors"
+            >
+              알겠어요!
+            </button>
+          </div>
+        </div>
+      )}
 
       <div className="px-4 py-4 border-b border-gray-100">
         <input
