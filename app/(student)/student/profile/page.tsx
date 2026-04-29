@@ -44,7 +44,7 @@ export default function StudentProfilePage() {
       {/* 헤더 */}
       <div className="bg-emerald-500 text-white px-6 pt-8 pb-8">
         <div className="flex items-center justify-between mb-6">
-          <Link href="/student/join" className="text-emerald-100 text-sm">← 세션 입장</Link>
+          <Link href="/student/home" className="text-emerald-100 text-sm">← 홈</Link>
           <button onClick={handleLogout} className="text-emerald-100 text-sm hover:text-white">로그아웃</button>
         </div>
         <h1 className="text-2xl font-bold">{student?.name}</h1>

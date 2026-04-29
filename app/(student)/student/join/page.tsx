@@ -77,8 +77,8 @@ function StudentJoinContent() {
 
   return (
     <main className="min-h-screen flex flex-col items-center justify-center bg-emerald-50 p-6 safe-top safe-bottom">
-      <Link href="/student/login" className="self-start text-emerald-700 text-sm mb-6 hover:underline">
-        ← 로그인으로
+      <Link href="/student/home" className="self-start text-emerald-700 text-sm mb-6 hover:underline">
+        ← 홈으로
       </Link>
 
       <div className="w-full max-w-xs text-center">
