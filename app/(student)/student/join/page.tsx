@@ -9,10 +9,34 @@ export default function StudentJoinPage() {
   const [code, setCode] = useState('')
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
+  const [shake, setShake] = useState(false)
 
   function handleInput(digit: string) {
-    if (code.length >= 6) return
-    setCode(prev => prev + digit)
+    if (code.length >= 6 || loading) return
+    const next = code + digit
+    setCode(next)
+    if (next.length === 6) {
+      setTimeout(() => {
+        setError('')
+        setLoading(true)
+        fetch('/api/student/session', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ code: next }),
+        }).then(r => r.json()).then(json => {
+          setLoading(false)
+          if (!json.success) {
+            setError(json.error ?? '세션을 찾을 수 없습니다.')
+            setCode('')
+            setShake(true)
+            setTimeout(() => setShake(false), 500)
+            if (typeof navigator !== 'undefined' && navigator.vibrate) navigator.vibrate([100, 50, 100])
+          } else {
+            router.push(`/student/quiz?session=${json.data.sessionId}`)
+          }
+        }).catch(() => { setLoading(false); setError('연결 오류') })
+      }, 150)
+    }
   }
 
   function handleDelete() {
@@ -35,6 +59,9 @@ export default function StudentJoinPage() {
     if (!json.success) {
       setError(json.error ?? '세션을 찾을 수 없습니다.')
       setCode('')
+      setShake(true)
+      setTimeout(() => setShake(false), 500)
+      if (typeof navigator !== 'undefined' && navigator.vibrate) navigator.vibrate([100, 50, 100])
       return
     }
 
@@ -53,7 +80,7 @@ export default function StudentJoinPage() {
         <p className="text-gray-500 mb-8">선생님이 알려준 6자리 코드를 입력하세요</p>
 
         {/* 코드 표시 */}
-        <div className="flex justify-center gap-2 mb-8">
+        <div className={`flex justify-center gap-2 mb-8 ${shake ? 'shake' : ''}`}>
           {[0,1,2,3,4,5].map(i => (
             <div
               key={i}

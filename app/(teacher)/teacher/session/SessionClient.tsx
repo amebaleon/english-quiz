@@ -342,18 +342,33 @@ export default function SessionClient({ quizzes, initialSession }: Props) {
 
   if (phase === 'finished') {
     return (
-      <div className="p-8 max-w-2xl text-center">
-        <div className="bg-white rounded-2xl border border-gray-200 p-12">
+      <div className="p-8 max-w-2xl">
+        <div className="bg-white rounded-2xl border border-gray-200 p-8 text-center mb-6">
           <p className="text-5xl mb-4">🎉</p>
           <h2 className="text-2xl font-bold text-gray-800 mb-2">세션 완료!</h2>
-          <p className="text-gray-500 mb-8">모든 문제가 종료되었습니다.</p>
-          <button
-            onClick={handleReset}
-            className="px-8 py-3 bg-indigo-600 hover:bg-indigo-700 text-white font-semibold rounded-2xl transition-colors"
-          >
+          <p className="text-gray-500 mb-6">참가자 {participants.length}명 · {questions.length}문제</p>
+          <button onClick={handleReset} className="px-8 py-3 bg-indigo-600 hover:bg-indigo-700 text-white font-semibold rounded-2xl transition-colors">
             새 세션 시작
           </button>
         </div>
+        {session && (
+          <div className="bg-white rounded-2xl border border-gray-200 overflow-hidden">
+            <div className="px-6 py-4 border-b border-gray-100 text-sm font-semibold text-gray-600">참가자 결과 (대시보드에서 상세 확인)</div>
+            <ul className="divide-y divide-gray-50">
+              {participants.length === 0 ? (
+                <li className="px-6 py-6 text-center text-gray-400 text-sm">참가자 없음</li>
+              ) : participants.map((p, i) => {
+                const name = (p.users as any)?.name ?? '알 수 없음'
+                return (
+                  <li key={p.student_id} className="flex items-center gap-3 px-6 py-3">
+                    <span className="text-sm text-gray-400 w-5">{i + 1}</span>
+                    <span className="flex-1 text-sm font-medium text-gray-700">{name}</span>
+                  </li>
+                )
+              })}
+            </ul>
+          </div>
+        )}
       </div>
     )
   }
@@ -557,13 +572,23 @@ export default function SessionClient({ quizzes, initialSession }: Props) {
             {/* 컨트롤 버튼 */}
             <div className="flex gap-3">
               {phase === 'question' && (
-                <button
-                  onClick={handleReveal}
-                  disabled={loading}
-                  className="flex-1 py-4 bg-amber-500 hover:bg-amber-600 disabled:bg-amber-300 text-white font-bold text-lg rounded-2xl transition-colors"
-                >
-                  {loading ? '처리 중...' : '정답 공개'}
-                </button>
+                <>
+                  <button
+                    onClick={handleReveal}
+                    disabled={loading}
+                    className="flex-1 py-4 bg-amber-500 hover:bg-amber-600 disabled:bg-amber-300 text-white font-bold text-lg rounded-2xl transition-colors"
+                  >
+                    {loading ? '처리 중...' : '정답 공개'}
+                  </button>
+                  <button
+                    onClick={handleNextQuestion}
+                    disabled={loading}
+                    title="채점 없이 다음 문제로"
+                    className="px-5 py-4 border-2 border-gray-300 text-gray-500 hover:bg-gray-50 font-semibold rounded-2xl transition-colors text-sm"
+                  >
+                    건너뛰기
+                  </button>
+                </>
               )}
               {phase === 'revealed' && (
                 <button

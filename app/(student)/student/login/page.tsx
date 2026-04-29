@@ -24,6 +24,7 @@ export default function StudentLoginPage() {
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
   const [showHelp, setShowHelp] = useState(false)
+  const [shake, setShake] = useState(false)
   const pinRef = useRef<HTMLInputElement>(null)
 
   useEffect(() => {
@@ -73,6 +74,9 @@ export default function StudentLoginPage() {
     if (!json.success) {
       setError(json.error ?? '로그인 실패')
       setPin('')
+      setShake(true)
+      setTimeout(() => setShake(false), 500)
+      if (typeof navigator !== 'undefined' && navigator.vibrate) navigator.vibrate([100, 50, 100])
       return
     }
 
@@ -101,7 +105,7 @@ export default function StudentLoginPage() {
           <p className="text-gray-500 mb-8">PIN 4자리를 입력하세요</p>
 
           {/* PIN 도트 표시 */}
-          <div className="flex justify-center gap-4 mb-8">
+          <div className={`flex justify-center gap-4 mb-8 ${shake ? 'shake' : ''}`}>
             {[0, 1, 2, 3].map(i => (
               <div
                 key={i}

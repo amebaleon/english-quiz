@@ -3,6 +3,7 @@
 import Link from 'next/link'
 import { usePathname, useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
+import { useEffect, useState } from 'react'
 
 const navItems = [
   { href: '/teacher', label: '대시보드', icon: '🏠', exact: true },
@@ -15,6 +16,14 @@ const navItems = [
 export default function TeacherSidebar() {
   const pathname = usePathname()
   const router = useRouter()
+  const [activeSession, setActiveSession] = useState(false)
+
+  useEffect(() => {
+    fetch('/api/teacher/sessions')
+      .then(r => r.json())
+      .then(json => setActiveSession(!!json.data))
+      .catch(() => {})
+  }, [pathname])
 
   async function handleLogout() {
     const supabase = createClient()
@@ -45,7 +54,10 @@ export default function TeacherSidebar() {
               }`}
             >
               <span>{item.icon}</span>
-              {item.label}
+              <span className="flex-1">{item.label}</span>
+              {item.href === '/teacher/session' && activeSession && (
+                <span className="w-2 h-2 bg-emerald-400 rounded-full animate-pulse" />
+              )}
             </Link>
           )
         })}

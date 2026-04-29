@@ -27,6 +27,7 @@ function QuizContent() {
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(true)
   const [timedOut, setTimedOut] = useState(false)
+  const [results, setResults] = useState<any[] | null>(null)
   const supabase = createClient()
   const channelRef = useRef<ReturnType<typeof supabase.channel> | null>(null)
   const currentQIdRef = useRef<string | null>(null)
@@ -149,17 +150,56 @@ function QuizContent() {
 
   // 세션 종료
   if (data.session.status === 'finished') {
+    if (!results) {
+      fetch(`/api/student/results?session_id=${sessionId}`)
+        .then(r => r.json())
+        .then(json => { if (json.success) setResults(json.data) })
+        .catch(() => setResults([]))
+    }
+    const me = results?.find(r => r.isMe)
+    const myRank = results ? results.findIndex(r => r.isMe) + 1 : 0
     return (
-      <div className="min-h-screen flex flex-col items-center justify-center bg-emerald-50 p-6 safe-top safe-bottom text-center">
-        <div className="text-6xl mb-6">🎉</div>
-        <h2 className="text-2xl font-bold text-gray-800 mb-2">퀴즈 종료!</h2>
-        <p className="text-gray-500 mb-8">수고했어요!</p>
-        <Link
-          href="/student/profile"
-          className="px-6 py-3 bg-emerald-500 text-white font-bold rounded-2xl"
-        >
-          내 포인트 확인
-        </Link>
+      <div className="min-h-screen flex flex-col bg-emerald-50 safe-top safe-bottom">
+        <div className="bg-emerald-500 text-white text-center py-8 px-6">
+          <div className="text-5xl mb-3">🎉</div>
+          <h2 className="text-2xl font-bold mb-1">퀴즈 종료!</h2>
+          <p className="text-emerald-100">수고했어요!</p>
+        </div>
+
+        {me && (
+          <div className="mx-4 mt-4 bg-white rounded-2xl border-2 border-emerald-300 p-5 text-center">
+            <p className="text-sm text-gray-500 mb-1">내 결과</p>
+            <p className="text-4xl font-black text-indigo-600 mb-1">{myRank}등</p>
+            <p className="text-gray-600 text-sm">{me.correct}/{me.total} 정답 · <span className="font-bold text-indigo-500">{me.pts}P</span> 획득</p>
+          </div>
+        )}
+
+        {results && results.length > 0 && (
+          <div className="mx-4 mt-4 bg-white rounded-2xl border border-gray-200 overflow-hidden">
+            <div className="px-5 py-3 border-b border-gray-100">
+              <p className="font-semibold text-gray-700 text-sm">전체 순위</p>
+            </div>
+            <ul className="divide-y divide-gray-50">
+              {results.slice(0, 10).map((r, i) => (
+                <li key={r.student_id} className={`flex items-center gap-3 px-5 py-3 ${r.isMe ? 'bg-indigo-50' : ''}`}>
+                  <span className={`w-7 h-7 rounded-full flex items-center justify-center text-sm font-bold shrink-0 ${
+                    i === 0 ? 'bg-yellow-400 text-white' : i === 1 ? 'bg-gray-300 text-white' : i === 2 ? 'bg-amber-500 text-white' : 'bg-gray-100 text-gray-500'
+                  }`}>{i + 1}</span>
+                  <span className={`flex-1 font-medium text-sm ${r.isMe ? 'text-indigo-700' : 'text-gray-700'}`}>
+                    {r.name}{r.isMe && ' (나)'}
+                  </span>
+                  <span className="text-sm font-bold text-indigo-600">{r.pts}P</span>
+                </li>
+              ))}
+            </ul>
+          </div>
+        )}
+
+        <div className="mx-4 mt-4">
+          <Link href="/student/profile" className="block w-full py-4 bg-emerald-500 hover:bg-emerald-600 text-white font-bold text-center rounded-2xl transition-colors">
+            내 포인트 확인
+          </Link>
+        </div>
       </div>
     )
   }
