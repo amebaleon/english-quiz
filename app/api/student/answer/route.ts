@@ -15,7 +15,19 @@ export async function POST(request: NextRequest) {
     }
     const trimmedContent = String(content).slice(0, 300)
 
-    const service = await createServiceClient()
+    const service = createServiceClient()
+
+    // 세션 참가 여부 확인
+    const { data: participant } = await service
+      .from('session_participants')
+      .select('student_id')
+      .eq('session_id', session_id)
+      .eq('student_id', studentId)
+      .single()
+
+    if (!participant) {
+      return NextResponse.json({ success: false, error: '세션에 참가하지 않은 학생입니다.' }, { status: 403 })
+    }
 
     // 이미 제출한 경우 무시
     const { data: existing } = await service
