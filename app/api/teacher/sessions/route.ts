@@ -1,12 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { createClient, createServiceClient } from '@/lib/supabase/server'
+import { createServiceClient } from '@/lib/supabase/server'
 import { generateSessionCode } from '@/lib/utils/pin'
-
-async function assertTeacher() {
-  const supabase = await createClient()
-  const { data: { user } } = await supabase.auth.getUser()
-  if (!user) throw new Error('UNAUTHORIZED')
-}
+import { assertTeacher, handleApiError } from '@/lib/api/auth'
 
 // 진행 중인 세션 조회
 export async function GET() {
@@ -22,8 +17,8 @@ export async function GET() {
       .single()
 
     return NextResponse.json({ success: true, data: data ?? null })
-  } catch (e: any) {
-    if (e.message === 'UNAUTHORIZED') return NextResponse.json({ success: false, error: '인증 필요' }, { status: 401 })
+  } catch (e) {
+    if (e instanceof Error && e.message === 'UNAUTHORIZED') return NextResponse.json({ success: false, error: '인증 필요' }, { status: 401 })
     return NextResponse.json({ success: true, data: null })
   }
 }
@@ -59,8 +54,7 @@ export async function POST(request: NextRequest) {
 
     if (error) return NextResponse.json({ success: false, error: error.message }, { status: 500 })
     return NextResponse.json({ success: true, data })
-  } catch (e: any) {
-    if (e.message === 'UNAUTHORIZED') return NextResponse.json({ success: false, error: '인증 필요' }, { status: 401 })
-    return NextResponse.json({ success: false, error: '서버 오류' }, { status: 500 })
+  } catch (e) {
+    return handleApiError(e)
   }
 }

@@ -7,6 +7,7 @@ import PinResetModal from '@/components/teacher/students/PinResetModal'
 import StatsModal from '@/components/teacher/students/StatsModal'
 import Toast from '@/components/ui/Toast'
 import Modal from '@/components/ui/Modal'
+import { useToast } from '@/lib/hooks/useToast'
 
 interface Class { id: string; name: string }
 interface Student {
@@ -30,13 +31,10 @@ export default function StudentsClient({ initialStudents, initialClasses }: Prop
   const [search, setSearch] = useState('')
   const [filterClass, setFilterClass] = useState('all')
   const [sortBy, setSortBy] = useState<'name' | 'points'>('name')
-  const [toast, setToast] = useState<{ msg: string; type: 'success' | 'error' } | null>(null)
+  const { toast, showToast, clearToast } = useToast()
   // 반 관리
   const [newClassName, setNewClassName] = useState('')
   const [classLoading, setClassLoading] = useState(false)
-
-  const showToast = (msg: string, type: 'success' | 'error' = 'success') =>
-    setToast({ msg, type })
 
   const filtered = useMemo(() => {
     let list = students
@@ -325,7 +323,7 @@ export default function StudentsClient({ initialStudents, initialClasses }: Prop
       )}
 
       {toast && (
-        <Toast message={toast.msg} type={toast.type} onClose={() => setToast(null)} />
+        <Toast message={toast.msg} type={toast.type} onClose={clearToast} />
       )}
     </div>
   )

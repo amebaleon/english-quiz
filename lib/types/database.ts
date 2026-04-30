@@ -1,6 +1,6 @@
 export type Role = 'teacher' | 'student'
 export type QuestionType = 'multiple' | 'short'
-export type SessionStatus = 'waiting' | 'active' | 'finished'
+export type SessionStatus = 'waiting' | 'active' | 'revealed' | 'finished'
 
 export interface Class {
   id: string

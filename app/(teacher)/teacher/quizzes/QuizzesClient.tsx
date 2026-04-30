@@ -4,6 +4,7 @@ import { useState } from 'react'
 import QuizEditorModal from '@/components/teacher/quizzes/QuizEditorModal'
 import Modal from '@/components/ui/Modal'
 import Toast from '@/components/ui/Toast'
+import { useToast } from '@/lib/hooks/useToast'
 
 interface Quiz {
   id: string
@@ -21,9 +22,7 @@ export default function QuizzesClient({ initialQuizzes }: { initialQuizzes: Quiz
   const [newTitle, setNewTitle] = useState('')
   const [creating, setCreating] = useState(false)
   const [showForm, setShowForm] = useState(false)
-  const [toast, setToast] = useState<{ msg: string; type: 'success' | 'error' } | null>(null)
-
-  const showToast = (msg: string, type: 'success' | 'error' = 'success') => setToast({ msg, type })
+  const { toast, showToast, clearToast } = useToast()
 
   function questionCount(quiz: Quiz) {
     return quiz.questions?.[0]?.count ?? 0
@@ -229,7 +228,7 @@ export default function QuizzesClient({ initialQuizzes }: { initialQuizzes: Quiz
         </Modal>
       )}
 
-      {toast && <Toast message={toast.msg} type={toast.type} onClose={() => setToast(null)} />}
+      {toast && <Toast message={toast.msg} type={toast.type} onClose={clearToast} />}
     </div>
   )
 }

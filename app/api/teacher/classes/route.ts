@@ -1,11 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { createClient, createServiceClient } from '@/lib/supabase/server'
-
-async function assertTeacher() {
-  const supabase = await createClient()
-  const { data: { user } } = await supabase.auth.getUser()
-  if (!user) throw new Error('UNAUTHORIZED')
-}
+import { createServiceClient } from '@/lib/supabase/server'
+import { assertTeacher } from '@/lib/api/auth'
 
 export async function GET() {
   try {

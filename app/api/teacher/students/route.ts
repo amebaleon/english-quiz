@@ -1,13 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { createClient, createServiceClient } from '@/lib/supabase/server'
+import { createServiceClient } from '@/lib/supabase/server'
 import { hashPin } from '@/lib/utils/pin'
-
-async function assertTeacher() {
-  const supabase = await createClient()
-  const { data: { user } } = await supabase.auth.getUser()
-  if (!user) throw new Error('UNAUTHORIZED')
-  return supabase
-}
+import { assertTeacher, handleApiError } from '@/lib/api/auth'
 
 // 학생 목록 조회
 export async function GET() {
@@ -22,9 +16,8 @@ export async function GET() {
 
     if (error) return NextResponse.json({ success: false, error: error.message }, { status: 500 })
     return NextResponse.json({ success: true, data })
-  } catch (e: any) {
-    if (e.message === 'UNAUTHORIZED') return NextResponse.json({ success: false, error: '인증 필요' }, { status: 401 })
-    return NextResponse.json({ success: false, error: '서버 오류' }, { status: 500 })
+  } catch (e) {
+    return handleApiError(e)
   }
 }
 
@@ -48,8 +41,7 @@ export async function POST(request: NextRequest) {
 
     if (error) return NextResponse.json({ success: false, error: error.message }, { status: 500 })
     return NextResponse.json({ success: true, data })
-  } catch (e: any) {
-    if (e.message === 'UNAUTHORIZED') return NextResponse.json({ success: false, error: '인증 필요' }, { status: 401 })
-    return NextResponse.json({ success: false, error: '서버 오류' }, { status: 500 })
+  } catch (e) {
+    return handleApiError(e)
   }
 }

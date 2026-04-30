@@ -1,11 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { createClient, createServiceClient } from '@/lib/supabase/server'
-
-async function assertTeacher() {
-  const supabase = await createClient()
-  const { data: { user } } = await supabase.auth.getUser()
-  if (!user) throw new Error('UNAUTHORIZED')
-}
+import { createServiceClient } from '@/lib/supabase/server'
+import { assertTeacher, handleApiError } from '@/lib/api/auth'
 
 // 문제 수정
 export async function PUT(request: NextRequest, { params }: { params: Promise<{ id: string; qid: string }> }) {
@@ -34,9 +29,8 @@ export async function PUT(request: NextRequest, { params }: { params: Promise<{ 
 
     if (error) return NextResponse.json({ success: false, error: error.message }, { status: 500 })
     return NextResponse.json({ success: true })
-  } catch (e: any) {
-    if (e.message === 'UNAUTHORIZED') return NextResponse.json({ success: false, error: '인증 필요' }, { status: 401 })
-    return NextResponse.json({ success: false, error: '서버 오류' }, { status: 500 })
+  } catch (e) {
+    return handleApiError(e)
   }
 }
 
@@ -49,9 +43,8 @@ export async function DELETE(_: NextRequest, { params }: { params: Promise<{ id:
     const { error } = await service.from('questions').delete().eq('id', qid)
     if (error) return NextResponse.json({ success: false, error: error.message }, { status: 500 })
     return NextResponse.json({ success: true })
-  } catch (e: any) {
-    if (e.message === 'UNAUTHORIZED') return NextResponse.json({ success: false, error: '인증 필요' }, { status: 401 })
-    return NextResponse.json({ success: false, error: '서버 오류' }, { status: 500 })
+  } catch (e) {
+    return handleApiError(e)
   }
 }
 
@@ -65,8 +58,7 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
     const { error } = await service.from('questions').update({ order_index }).eq('id', qid)
     if (error) return NextResponse.json({ success: false, error: error.message }, { status: 500 })
     return NextResponse.json({ success: true })
-  } catch (e: any) {
-    if (e.message === 'UNAUTHORIZED') return NextResponse.json({ success: false, error: '인증 필요' }, { status: 401 })
-    return NextResponse.json({ success: false, error: '서버 오류' }, { status: 500 })
+  } catch (e) {
+    return handleApiError(e)
   }
 }

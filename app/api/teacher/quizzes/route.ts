@@ -1,11 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { createClient, createServiceClient } from '@/lib/supabase/server'
-
-async function assertTeacher() {
-  const supabase = await createClient()
-  const { data: { user } } = await supabase.auth.getUser()
-  if (!user) throw new Error('UNAUTHORIZED')
-}
+import { createServiceClient } from '@/lib/supabase/server'
+import { assertTeacher, handleApiError } from '@/lib/api/auth'
 
 export async function GET() {
   try {
@@ -18,9 +13,8 @@ export async function GET() {
 
     if (error) return NextResponse.json({ success: false, error: error.message }, { status: 500 })
     return NextResponse.json({ success: true, data })
-  } catch (e: any) {
-    if (e.message === 'UNAUTHORIZED') return NextResponse.json({ success: false, error: '인증 필요' }, { status: 401 })
-    return NextResponse.json({ success: false, error: '서버 오류' }, { status: 500 })
+  } catch (e) {
+    return handleApiError(e)
   }
 }
 
@@ -39,8 +33,7 @@ export async function POST(request: NextRequest) {
 
     if (error) return NextResponse.json({ success: false, error: error.message }, { status: 500 })
     return NextResponse.json({ success: true, data })
-  } catch (e: any) {
-    if (e.message === 'UNAUTHORIZED') return NextResponse.json({ success: false, error: '인증 필요' }, { status: 401 })
-    return NextResponse.json({ success: false, error: '서버 오류' }, { status: 500 })
+  } catch (e) {
+    return handleApiError(e)
   }
 }

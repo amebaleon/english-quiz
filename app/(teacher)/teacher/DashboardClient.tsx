@@ -4,11 +4,13 @@ import { useState, useEffect, useRef } from 'react'
 import Link from 'next/link'
 import Tutorial from '@/components/teacher/Tutorial'
 import * as XLSX from 'xlsx'
+import { SESSION_STATUS_LABEL, SESSION_STATUS_COLOR } from '@/lib/constants'
+import type { SessionStatus } from '@/lib/types/database'
 
 interface Session {
   id: string
   code: string
-  status: string
+  status: SessionStatus
   created_at: string
   quizzes: { title: string } | null
 }
@@ -44,12 +46,6 @@ interface SessionDetail {
   participants: ParticipantStat[]
 }
 
-const statusLabel: Record<string, string> = { waiting: '대기 중', active: '진행 중', finished: '완료' }
-const statusColor: Record<string, string> = {
-  waiting: 'bg-yellow-100 text-yellow-700',
-  active: 'bg-green-100 text-green-700',
-  finished: 'bg-gray-100 text-gray-500',
-}
 
 export default function DashboardClient({ studentCount, quizCount, recentSessions }: Props) {
   const [detail, setDetail] = useState<SessionDetail | null>(null)
@@ -141,8 +137,8 @@ export default function DashboardClient({ studentCount, quizCount, recentSession
                   <p className="font-medium text-gray-800">{s.quizzes?.title ?? '(삭제된 퀴즈)'}</p>
                   <p className="text-sm text-gray-400">코드: {s.code} · {new Date(s.created_at).toLocaleDateString('ko-KR')}</p>
                 </div>
-                <span className={`text-xs font-medium px-3 py-1 rounded-full ${statusColor[s.status]}`}>
-                  {statusLabel[s.status]}
+                <span className={`text-xs font-medium px-3 py-1 rounded-full ${SESSION_STATUS_COLOR[s.status]}`}>
+                  {SESSION_STATUS_LABEL[s.status]}
                 </span>
               </li>
             ))}

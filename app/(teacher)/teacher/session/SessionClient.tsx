@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback, useRef } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import Toast from '@/components/ui/Toast'
+import { useToast } from '@/lib/hooks/useToast'
 
 interface Quiz { id: string; title: string; questions: { count: number }[] }
 interface Session {
@@ -42,12 +43,10 @@ export default function SessionClient({ quizzes, initialSession }: Props) {
   const [answers, setAnswers] = useState<Answer[]>([])
   const [participants, setParticipants] = useState<Participant[]>([])
   const [loading, setLoading] = useState(false)
-  const [toast, setToast] = useState<{ msg: string; type: 'success' | 'error' } | null>(null)
+  const { toast, showToast, clearToast } = useToast()
   const [gradingAnswerId, setGradingAnswerId] = useState<string | null>(null)
   const supabase = createClient()
   const channelRef = useRef<ReturnType<typeof supabase.channel> | null>(null)
-
-  const showToast = (msg: string, type: 'success' | 'error' = 'success') => setToast({ msg, type })
 
   // 참가자 목록 로드
   const loadParticipants = useCallback(async (sessionId: string) => {
@@ -341,7 +340,7 @@ export default function SessionClient({ quizzes, initialSession }: Props) {
           </div>
         )}
 
-        {toast && <Toast message={toast.msg} type={toast.type} onClose={() => setToast(null)} />}
+        {toast && <Toast message={toast.msg} type={toast.type} onClose={clearToast} />}
       </div>
     )
   }
@@ -627,7 +626,7 @@ export default function SessionClient({ quizzes, initialSession }: Props) {
         )}
       </div>
 
-      {toast && <Toast message={toast.msg} type={toast.type} onClose={() => setToast(null)} />}
+      {toast && <Toast message={toast.msg} type={toast.type} onClose={clearToast} />}
     </div>
   )
 }
