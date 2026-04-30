@@ -263,7 +263,7 @@ export default function StudentsClient({ initialStudents, initialClasses }: Prop
                   </div>
                 </td>
               </tr>
-            )})
+            )})}
           </tbody>
         </table>
       </div>
