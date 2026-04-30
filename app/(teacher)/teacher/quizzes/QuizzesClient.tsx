@@ -41,6 +41,7 @@ export default function QuizzesClient({ initialQuizzes }: { initialQuizzes: Quiz
   const [creating, setCreating] = useState(false)
   const [showForm, setShowForm] = useState(false)
   const [activeTab, setActiveTab] = useState('전체')
+  const [search, setSearch] = useState('')
   const { toast, showToast, clearToast } = useToast()
 
   const categories = useMemo(() => {
@@ -48,10 +49,11 @@ export default function QuizzesClient({ initialQuizzes }: { initialQuizzes: Quiz
     return ['전체', ...cats.sort()]
   }, [quizzes])
 
-  const filtered = useMemo(() =>
-    activeTab === '전체' ? quizzes : quizzes.filter(q => (q.category || '기타') === activeTab),
-    [quizzes, activeTab]
-  )
+  const filtered = useMemo(() => {
+    let list = activeTab === '전체' ? quizzes : quizzes.filter(q => (q.category || '기타') === activeTab)
+    if (search.trim()) list = list.filter(q => q.title.toLowerCase().includes(search.trim().toLowerCase()))
+    return list
+  }, [quizzes, activeTab, search])
 
   function questionCount(quiz: Quiz) {
     return quiz.questions?.[0]?.count ?? 0
@@ -115,19 +117,33 @@ export default function QuizzesClient({ initialQuizzes }: { initialQuizzes: Quiz
   return (
     <div className="p-8">
       {/* 헤더 */}
-      <div className="flex items-center justify-between mb-6">
+      <div className="flex items-center justify-between mb-6 gap-4 flex-wrap">
         <div>
           <h2 className="text-2xl font-bold text-gray-800">퀴즈 관리</h2>
           <p className="text-gray-400 text-sm mt-0.5">총 {quizzes.length}개</p>
         </div>
-        {!showForm && (
-          <button
-            onClick={() => setShowForm(true)}
-            className="px-4 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-sm font-semibold transition-colors"
-          >
-            + 퀴즈 만들기
-          </button>
-        )}
+        <div className="flex items-center gap-3">
+          <div className="relative">
+            <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-sm">🔍</span>
+            <input
+              value={search}
+              onChange={e => setSearch(e.target.value)}
+              placeholder="퀴즈 검색..."
+              className="pl-8 pr-4 py-2.5 border border-gray-300 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 w-48"
+            />
+            {search && (
+              <button onClick={() => setSearch('')} className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 text-xs">✕</button>
+            )}
+          </div>
+          {!showForm && (
+            <button
+              onClick={() => setShowForm(true)}
+              className="px-4 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-sm font-semibold transition-colors"
+            >
+              + 퀴즈 만들기
+            </button>
+          )}
+        </div>
       </div>
 
       {/* 새 퀴즈 폼 */}
@@ -205,7 +221,9 @@ export default function QuizzesClient({ initialQuizzes }: { initialQuizzes: Quiz
       {filtered.length === 0 && !showForm ? (
         <div className="bg-white rounded-2xl border border-gray-200 py-16 text-center">
           <p className="text-4xl mb-4">📝</p>
-          <p className="text-gray-500 mb-4">{activeTab === '전체' ? '퀴즈가 없습니다.' : `"${activeTab}" 카테고리에 퀴즈가 없습니다.`}</p>
+          <p className="text-gray-500 mb-4">
+            {search.trim() ? `"${search}" 검색 결과가 없습니다.` : activeTab === '전체' ? '퀴즈가 없습니다.' : `"${activeTab}" 카테고리에 퀴즈가 없습니다.`}
+          </p>
           {activeTab === '전체' && (
             <button
               onClick={() => setShowForm(true)}

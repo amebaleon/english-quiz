@@ -2,6 +2,7 @@
 
 import { useState, useMemo } from 'react'
 import AddStudentModal from '@/components/teacher/students/AddStudentModal'
+import BulkImportModal from '@/components/teacher/students/BulkImportModal'
 import PointsModal from '@/components/teacher/students/PointsModal'
 import PinResetModal from '@/components/teacher/students/PinResetModal'
 import StatsModal from '@/components/teacher/students/StatsModal'
@@ -21,7 +22,7 @@ interface Props {
   initialClasses: Class[]
 }
 
-type ModalType = 'add' | 'points' | 'pin' | 'stats' | 'class' | null
+type ModalType = 'add' | 'bulk' | 'points' | 'pin' | 'stats' | 'class' | null
 
 export default function StudentsClient({ initialStudents, initialClasses }: Props) {
   const [students, setStudents] = useState(initialStudents)
@@ -125,6 +126,12 @@ export default function StudentsClient({ initialStudents, initialClasses }: Prop
             className="px-4 py-2.5 border border-gray-300 rounded-xl text-gray-600 hover:bg-gray-50 text-sm font-medium transition-colors"
           >
             반 관리
+          </button>
+          <button
+            onClick={() => setModal('bulk')}
+            className="px-4 py-2.5 border border-indigo-300 text-indigo-600 hover:bg-indigo-50 rounded-xl text-sm font-medium transition-colors"
+          >
+            일괄 등록
           </button>
           <button
             onClick={() => setModal('add')}
@@ -243,6 +250,12 @@ export default function StudentsClient({ initialStudents, initialClasses }: Prop
       </div>
 
       {/* 모달들 */}
+      {modal === 'bulk' && (
+        <BulkImportModal
+          onClose={() => setModal(null)}
+          onDone={(created) => { refreshStudents(); showToast(`${created}명 등록 완료`) }}
+        />
+      )}
       {modal === 'add' && (
         <AddStudentModal
           classes={classes}
