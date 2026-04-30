@@ -3,7 +3,7 @@ import { createServiceClient } from '@/lib/supabase/server'
 import { hashPin } from '@/lib/utils/pin'
 import { assertTeacher, handleApiError } from '@/lib/api/auth'
 
-interface StudentRow { name: string; pin: string; class_name?: string }
+interface StudentRow { name: string; pin: string; class_name?: string; birth_year?: number | null; school?: string }
 
 export async function POST(request: NextRequest) {
   try {
@@ -52,7 +52,14 @@ export async function POST(request: NextRequest) {
 
       const { error } = await service
         .from('users')
-        .insert({ name: row.name.trim(), role: 'student', pin_hash, class_id })
+        .insert({
+          name: row.name.trim(),
+          role: 'student',
+          pin_hash,
+          class_id,
+          birth_year: row.birth_year ? Number(row.birth_year) : null,
+          school: row.school?.trim() || null,
+        })
 
       if (error) errors.push(`${row.name}: ${error.message}`)
       else created++

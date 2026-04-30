@@ -25,7 +25,7 @@ export default function Loading() {
       <div className="bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden">
         {/* 테이블 헤더 */}
         <div className="flex items-center gap-6 px-6 py-3 border-b border-gray-100 bg-gray-50">
-          {[80, 60, 72, 60].map((w, i) => (
+          {[80, 60, 72, 60, 60].map((w, i) => (
             <div key={i} className="h-3 bg-gray-200 rounded animate-pulse" style={{ width: `${w}px` }} />
           ))}
           <div className="ml-auto h-3 w-20 bg-gray-200 rounded animate-pulse" />
@@ -34,10 +34,11 @@ export default function Loading() {
           <div key={i} className="flex items-center gap-6 px-6 py-4 border-b border-gray-50 animate-pulse">
             <div className="h-4 w-20 bg-gray-200 rounded" />
             <div className="h-4 w-16 bg-gray-100 rounded" />
+            <div className="h-4 w-20 bg-gray-100 rounded" />
             <div className="h-4 w-14 bg-gray-100 rounded" />
             <div className="h-4 w-16 bg-gray-100 rounded" />
             <div className="flex gap-2 ml-auto">
-              {[...Array(4)].map((_, j) => (
+              {[...Array(5)].map((_, j) => (
                 <div key={j} className="h-7 w-12 bg-gray-100 rounded-lg" />
               ))}
             </div>

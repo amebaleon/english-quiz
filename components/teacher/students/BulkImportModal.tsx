@@ -3,7 +3,7 @@
 import { useState, useRef } from 'react'
 import Modal from '@/components/ui/Modal'
 
-interface Row { name: string; pin: string; class_name: string }
+interface Row { name: string; pin: string; class_name: string; birth_year?: string; school?: string }
 
 interface Props {
   onClose: () => void
@@ -15,8 +15,8 @@ function parseCSV(text: string): Row[] {
   const rows: Row[] = []
   for (const line of lines) {
     const cols = line.split(',').map(c => c.trim().replace(/^"|"$/g, ''))
-    const [name = '', pin = '', class_name = ''] = cols
-    if (name && name !== '이름') rows.push({ name, pin, class_name })
+    const [name = '', pin = '', class_name = '', birth_year = '', school = ''] = cols
+    if (name && name !== '이름') rows.push({ name, pin, class_name, birth_year, school })
   }
   return rows
 }
@@ -29,8 +29,9 @@ async function parseExcel(file: File): Promise<Row[]> {
   const data: any[][] = xlsx.utils.sheet_to_json(ws, { header: 1 })
   const rows: Row[] = []
   for (const row of data) {
-    const [name, pin, class_name] = row.map((v: any) => String(v ?? '').trim())
-    if (name && name !== '이름' && name !== 'undefined') rows.push({ name, pin: String(pin), class_name: class_name ?? '' })
+    const [name, pin, class_name, birth_year, school] = row.map((v: any) => String(v ?? '').trim())
+    if (name && name !== '이름' && name !== 'undefined')
+      rows.push({ name, pin: String(pin), class_name: class_name ?? '', birth_year: birth_year ?? '', school: school ?? '' })
   }
   return rows
 }
@@ -96,12 +97,12 @@ export default function BulkImportModal({ onClose, onDone }: Props) {
             <p className="font-semibold text-indigo-700 mb-2">📋 파일 형식</p>
             <p className="text-indigo-600 mb-2">CSV 또는 Excel (.xlsx) — 첫 번째 시트 기준</p>
             <div className="bg-white rounded-lg p-3 font-mono text-xs text-gray-700 border border-indigo-100">
-              이름,PIN,반<br/>
-              홍길동,1234,1반<br/>
-              김철수,5678,2반<br/>
-              이영희,9012,
+              이름,PIN,반,출생년도,학교<br/>
+              홍길동,1234,1반,2012,한빛중학교<br/>
+              김철수,5678,2반,,<br/>
+              이영희,9012,,,
             </div>
-            <p className="text-indigo-500 text-xs mt-2">· PIN은 4자리 숫자 필수 · 반은 선택 (없으면 비워두기)</p>
+            <p className="text-indigo-500 text-xs mt-2">· PIN 4자리 필수 · 반/출생년도/학교는 선택 (없으면 비워두기)</p>
           </div>
 
           {/* 파일 업로드 */}
@@ -125,7 +126,7 @@ export default function BulkImportModal({ onClose, onDone }: Props) {
             <textarea
               value={csvText}
               onChange={e => setCsvText(e.target.value)}
-              placeholder={'이름,PIN,반\n홍길동,1234,1반\n김철수,5678,'}
+              placeholder={'이름,PIN,반,출생년도,학교\n홍길동,1234,1반,2012,한빛중학교\n김철수,5678,,,'}
               rows={5}
               className="w-full px-4 py-3 border border-gray-300 rounded-xl font-mono text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 resize-none"
             />
@@ -151,17 +152,19 @@ export default function BulkImportModal({ onClose, onDone }: Props) {
           </div>
 
           <div className="border border-gray-200 rounded-xl overflow-hidden">
-            <div className="grid grid-cols-3 bg-gray-50 px-4 py-2.5 text-xs font-semibold text-gray-500 uppercase">
-              <span>이름</span><span>PIN</span><span>반</span>
+            <div className="grid grid-cols-5 bg-gray-50 px-4 py-2.5 text-xs font-semibold text-gray-500 uppercase">
+              <span>이름</span><span>PIN</span><span>반</span><span>출생</span><span>학교</span>
             </div>
             <div className="divide-y divide-gray-100 max-h-64 overflow-y-auto">
               {rows.map((row, i) => (
-                <div key={i} className={`grid grid-cols-3 px-4 py-2.5 text-sm ${
+                <div key={i} className={`grid grid-cols-5 px-4 py-2.5 text-sm ${
                   !row.pin || !/^\d{4}$/.test(row.pin) ? 'bg-red-50 text-red-600' : 'text-gray-700'
                 }`}>
                   <span>{row.name}</span>
                   <span className="font-mono">{row.pin || <span className="text-red-400">없음</span>}</span>
                   <span className="text-gray-400">{row.class_name || '—'}</span>
+                  <span className="text-gray-400">{row.birth_year || '—'}</span>
+                  <span className="text-gray-400 truncate">{row.school || '—'}</span>
                 </div>
               ))}
             </div>

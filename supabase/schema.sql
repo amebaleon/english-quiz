@@ -20,6 +20,8 @@ CREATE TABLE IF NOT EXISTS public.users (
   pin_hash     text,
   class_id     uuid REFERENCES public.classes(id) ON DELETE SET NULL,
   total_points integer NOT NULL DEFAULT 0,
+  birth_year   integer,
+  school       text,
   created_at   timestamptz NOT NULL DEFAULT now(),
   auth_id      uuid UNIQUE
 );

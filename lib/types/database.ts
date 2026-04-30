@@ -15,6 +15,8 @@ export interface User {
   pin_hash: string | null
   class_id: string | null
   total_points: number
+  birth_year: number | null
+  school: string | null
   created_at: string
   auth_id: string | null
 }

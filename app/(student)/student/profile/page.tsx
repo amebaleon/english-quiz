@@ -4,8 +4,9 @@ import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import Icon from '@/components/ui/Icon'
+import { gradeLabel } from '@/lib/utils/grade'
 
-interface Student { id: string; name: string; total_points: number; class_id: string | null }
+interface Student { id: string; name: string; total_points: number; class_id: string | null; birth_year?: number | null; school?: string | null }
 interface RankEntry { id: string; name: string; total_points: number; rank: number }
 
 export default function StudentProfilePage() {
@@ -77,6 +78,16 @@ export default function StudentProfilePage() {
           <button onClick={handleLogout} className="text-emerald-100 text-sm hover:text-white">로그아웃</button>
         </div>
         <h1 className="text-2xl font-bold">{student?.name}</h1>
+        <div className="flex items-center gap-2 mt-1 flex-wrap">
+          {student?.school && (
+            <span className="text-emerald-100 text-sm">{student.school}</span>
+          )}
+          {student?.birth_year && (
+            <span className="text-emerald-200 text-sm bg-white/10 px-2 py-0.5 rounded-full">
+              {gradeLabel(student.birth_year)}
+            </span>
+          )}
+        </div>
         <div className="mt-4 flex items-end gap-2">
           <span className="text-5xl font-black">{student?.total_points.toLocaleString()}</span>
           <span className="text-emerald-200 text-xl mb-1">P</span>

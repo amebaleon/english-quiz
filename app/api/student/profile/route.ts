@@ -12,7 +12,7 @@ export async function GET() {
 
     const { data: student } = await service
       .from('users')
-      .select('id, name, total_points, class_id')
+      .select('id, name, total_points, class_id, birth_year, school')
       .eq('id', studentId)
       .single()
 

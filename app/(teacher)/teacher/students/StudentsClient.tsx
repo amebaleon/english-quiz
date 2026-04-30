@@ -6,14 +6,17 @@ import BulkImportModal from '@/components/teacher/students/BulkImportModal'
 import PointsModal from '@/components/teacher/students/PointsModal'
 import PinResetModal from '@/components/teacher/students/PinResetModal'
 import StatsModal from '@/components/teacher/students/StatsModal'
+import ProfileEditModal from '@/components/teacher/students/ProfileEditModal'
 import Toast from '@/components/ui/Toast'
 import Modal from '@/components/ui/Modal'
 import { useToast } from '@/lib/hooks/useToast'
+import { gradeLabel } from '@/lib/utils/grade'
 
 interface Class { id: string; name: string }
 interface Student {
   id: string; name: string; class_id: string | null
-  total_points: number; created_at: string
+  total_points: number; birth_year: number | null; school: string | null
+  created_at: string
   classes: { id: string; name: string } | { id: string; name: string }[] | null
 }
 
@@ -22,7 +25,7 @@ interface Props {
   initialClasses: Class[]
 }
 
-type ModalType = 'add' | 'bulk' | 'points' | 'pin' | 'stats' | 'class' | null
+type ModalType = 'add' | 'bulk' | 'points' | 'pin' | 'stats' | 'profile' | 'class' | null
 
 export default function StudentsClient({ initialStudents, initialClasses }: Props) {
   const [students, setStudents] = useState(initialStudents)
@@ -188,6 +191,7 @@ export default function StudentsClient({ initialStudents, initialClasses }: Prop
             <tr className="border-b border-gray-100 text-left">
               <th className="px-6 py-3.5 text-xs font-semibold text-gray-500 uppercase tracking-wide">이름</th>
               <th className="px-6 py-3.5 text-xs font-semibold text-gray-500 uppercase tracking-wide">반</th>
+              <th className="px-6 py-3.5 text-xs font-semibold text-gray-500 uppercase tracking-wide">학교 / 학년</th>
               <th className="px-6 py-3.5 text-xs font-semibold text-gray-500 uppercase tracking-wide">포인트</th>
               <th className="px-6 py-3.5 text-xs font-semibold text-gray-500 uppercase tracking-wide">액션</th>
             </tr>
@@ -195,11 +199,13 @@ export default function StudentsClient({ initialStudents, initialClasses }: Prop
           <tbody className="divide-y divide-gray-50">
             {filtered.length === 0 ? (
               <tr>
-                <td colSpan={4} className="px-6 py-12 text-center text-gray-400">
+                <td colSpan={5} className="px-6 py-12 text-center text-gray-400">
                   {students.length === 0 ? '학생을 추가해 주세요.' : '검색 결과가 없습니다.'}
                 </td>
               </tr>
-            ) : filtered.map(student => (
+            ) : filtered.map(student => {
+              const grade = gradeLabel(student.birth_year)
+              return (
               <tr key={student.id} className="hover:bg-gray-50 transition-colors">
                 <td className="px-6 py-4 font-medium text-gray-800">{student.name}</td>
                 <td className="px-6 py-4">
@@ -213,10 +219,23 @@ export default function StudentsClient({ initialStudents, initialClasses }: Prop
                   </select>
                 </td>
                 <td className="px-6 py-4">
+                  <div className="flex flex-col gap-0.5">
+                    {student.school && <span className="text-sm text-gray-700">{student.school}</span>}
+                    {grade && <span className="text-xs text-indigo-500 font-semibold">{grade}</span>}
+                    {!student.school && !grade && <span className="text-xs text-gray-300">—</span>}
+                  </div>
+                </td>
+                <td className="px-6 py-4">
                   <span className="font-semibold text-indigo-600">{student.total_points.toLocaleString()} P</span>
                 </td>
                 <td className="px-6 py-4">
                   <div className="flex gap-2 flex-wrap">
+                    <button
+                      onClick={() => { setSelected(student); setModal('profile') }}
+                      className="px-3 py-1.5 text-xs bg-gray-100 text-gray-600 hover:bg-gray-200 rounded-lg transition-colors font-medium"
+                    >
+                      프로필
+                    </button>
                     <button
                       onClick={() => { setSelected(student); setModal('points') }}
                       className="px-3 py-1.5 text-xs bg-indigo-50 text-indigo-600 hover:bg-indigo-100 rounded-lg transition-colors font-medium"
@@ -244,7 +263,7 @@ export default function StudentsClient({ initialStudents, initialClasses }: Prop
                   </div>
                 </td>
               </tr>
-            ))}
+            )})
           </tbody>
         </table>
       </div>
@@ -286,6 +305,14 @@ export default function StudentsClient({ initialStudents, initialClasses }: Prop
 
       {modal === 'stats' && selected && (
         <StatsModal student={selected} onClose={() => setModal(null)} />
+      )}
+
+      {modal === 'profile' && selected && (
+        <ProfileEditModal
+          student={selected}
+          onClose={() => setModal(null)}
+          onSaved={() => { refreshStudents(); showToast('프로필 저장 완료') }}
+        />
       )}
 
       {/* 반 관리 모달 */}
