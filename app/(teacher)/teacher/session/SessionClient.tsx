@@ -45,6 +45,7 @@ export default function SessionClient({ quizzes, initialSession }: Props) {
   const [loading, setLoading] = useState(false)
   const { toast, showToast, clearToast } = useToast()
   const [gradingAnswerId, setGradingAnswerId] = useState<string | null>(null)
+  const [origin, setOrigin] = useState('')
   const supabase = createClient()
   const channelRef = useRef<ReturnType<typeof supabase.channel> | null>(null)
 
@@ -129,6 +130,8 @@ export default function SessionClient({ quizzes, initialSession }: Props) {
     ch.subscribe()
     channelRef.current = ch
   }, [supabase, loadParticipants, loadAnswers])
+
+  useEffect(() => { setOrigin(window.location.origin) }, [])
 
   // 초기 세션 복원
   useEffect(() => {
@@ -403,9 +406,9 @@ export default function SessionClient({ quizzes, initialSession }: Props) {
           {session?.code && (
             <div className="mt-4 bg-white rounded-xl p-2 inline-block">
               <img
-                src={`https://api.qrserver.com/v1/create-qr-code/?size=120x120&data=${encodeURIComponent(
-                  `${typeof window !== 'undefined' ? window.location.origin : ''}/student/join?code=${session.code}`
-                )}`}
+                src={origin ? `https://api.qrserver.com/v1/create-qr-code/?size=120x120&data=${encodeURIComponent(
+                  `${origin}/student/join?code=${session.code}`
+                )}` : undefined}
                 alt="QR코드"
                 width={120}
                 height={120}
