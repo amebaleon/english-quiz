@@ -155,18 +155,18 @@ export default function HelpPage() {
       ) : (
         <>
           {/* 탭 */}
-          <div className="flex gap-1 mb-6 border-b border-gray-200 overflow-x-auto">
-            {TABS.map(({ key, label, emoji }) => (
+          <div className="flex flex-wrap gap-2 mb-6">
+            {TABS.map(({ key, label }) => (
               <button
                 key={key}
                 onClick={() => setTab(key)}
-                className={`px-4 py-3 text-sm font-medium transition-colors border-b-2 -mb-px whitespace-nowrap ${
+                className={`px-4 py-2 rounded-full text-sm font-medium transition-colors ${
                   tab === key
-                    ? 'border-indigo-500 text-indigo-600'
-                    : 'border-transparent text-gray-500 hover:text-gray-700'
+                    ? 'bg-indigo-600 text-white'
+                    : 'bg-white border border-gray-200 text-gray-600 hover:border-indigo-300 hover:text-indigo-600'
                 }`}
               >
-                {emoji} {label}
+                {label}
               </button>
             ))}
           </div>

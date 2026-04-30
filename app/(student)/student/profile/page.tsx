@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
+import Icon from '@/components/ui/Icon'
 
 interface Student { id: string; name: string; total_points: number; class_id: string | null }
 interface RankEntry { id: string; name: string; total_points: number; rank: number }
@@ -93,7 +94,9 @@ export default function StudentProfilePage() {
             className="w-full flex items-center justify-between bg-white rounded-2xl border border-gray-200 px-5 py-4 active:scale-[0.98] transition-all duration-75"
           >
             <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-xl bg-amber-50 flex items-center justify-center text-amber-500 text-lg">🔑</div>
+              <div className="w-10 h-10 rounded-xl bg-amber-50 flex items-center justify-center">
+                <Icon name="key" size={20} className="text-amber-500" strokeWidth={1.5} />
+              </div>
               <div className="text-left">
                 <p className="font-semibold text-gray-800 text-sm">PIN 변경</p>
                 <p className="text-xs text-gray-400">로그인 PIN 번호를 바꿉니다</p>
@@ -110,7 +113,9 @@ export default function StudentProfilePage() {
             </div>
             {pinSuccess ? (
               <div className="text-center py-6 animate-bounce-in">
-                <p className="text-4xl mb-2">✅</p>
+                <div className="flex justify-center mb-2">
+                <Icon name="check-circle" size={48} className="text-emerald-500" strokeWidth={1.5} />
+              </div>
                 <p className="text-emerald-600 font-semibold">PIN이 변경되었습니다!</p>
               </div>
             ) : (
@@ -175,15 +180,17 @@ export default function StudentProfilePage() {
             <ul className="divide-y divide-gray-50">
               {ranking.map(r => {
                 const isMe = r.id === student?.id
-                const medal = r.rank === 1 ? '🥇' : r.rank === 2 ? '🥈' : r.rank === 3 ? '🥉' : null
+                const rankColor =
+                  r.rank === 1 ? 'bg-yellow-400 text-white' :
+                  r.rank === 2 ? 'bg-gray-300 text-white' :
+                  r.rank === 3 ? 'bg-amber-500 text-white' :
+                  'bg-gray-100 text-gray-400'
                 return (
                   <li key={r.id} className={`flex items-center gap-4 px-5 py-4 ${isMe ? 'bg-emerald-50' : ''}`}>
                     <div className="w-8 text-center">
-                      {medal ? (
-                        <span className="text-xl">{medal}</span>
-                      ) : (
-                        <span className="text-sm font-bold text-gray-400">{r.rank}</span>
-                      )}
+                      <span className={`inline-flex w-7 h-7 rounded-full items-center justify-center text-xs font-bold ${rankColor}`}>
+                        {r.rank}
+                      </span>
                     </div>
                     <span className={`flex-1 font-medium ${isMe ? 'text-emerald-700 font-bold' : 'text-gray-700'}`}>
                       {r.name} {isMe && <span className="text-xs bg-emerald-100 text-emerald-600 px-2 py-0.5 rounded-full ml-1">나</span>}

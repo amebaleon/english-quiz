@@ -3,6 +3,7 @@
 import { useState, useEffect, Suspense } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import Link from 'next/link'
+import Icon from '@/components/ui/Icon'
 
 type Step = 'name' | 'pin'
 
@@ -78,16 +79,20 @@ function StudentLoginContent() {
         </button>
 
         <div className="w-full max-w-xs text-center">
-          <div className="text-6xl mb-4">🔐</div>
+          <div className="w-16 h-16 rounded-2xl bg-emerald-100 flex items-center justify-center mx-auto mb-4">
+            <Icon name="lock" size={32} className="text-emerald-600" strokeWidth={1.5} />
+          </div>
           <h2 className="text-2xl font-bold text-gray-800 mb-1">{name}</h2>
           <p className="text-gray-500 mb-8">PIN 4자리를 입력하세요</p>
 
-          <div className={`flex justify-center gap-4 mb-8 ${shake ? 'shake' : ''}`}>
+          <div className={`flex justify-center gap-3 mb-8 ${shake ? 'shake' : ''}`}>
             {[0, 1, 2, 3].map(i => (
               <div
                 key={i}
-                className={`w-5 h-5 rounded-full border-2 transition-colors ${
-                  pin.length > i ? 'bg-emerald-500 border-emerald-500' : 'border-gray-300'
+                className={`w-6 h-6 rounded-full border-2 transition-all duration-150 ${
+                  pin.length > i
+                    ? 'bg-emerald-500 border-emerald-500 scale-110'
+                    : 'border-gray-300 bg-white'
                 }`}
               />
             ))}
@@ -119,9 +124,9 @@ function StudentLoginContent() {
             <button
               onClick={handlePinDelete}
               disabled={loading}
-              className="h-16 text-2xl bg-white border border-gray-200 rounded-2xl hover:bg-red-50 active:bg-red-100 active:scale-95 transition-all duration-75 shadow-sm disabled:opacity-50"
+              className="h-16 flex items-center justify-center bg-white border border-gray-200 rounded-2xl hover:bg-red-50 active:bg-red-100 active:scale-95 transition-all duration-75 shadow-sm disabled:opacity-50"
             >
-              ⌫
+              <Icon name="backspace" size={22} className="text-gray-500" />
             </button>
           </div>
 
@@ -139,7 +144,9 @@ function StudentLoginContent() {
 
       <div className="w-full max-w-xs">
         <div className="text-center mb-8">
-          <div className="text-6xl mb-4">👤</div>
+          <div className="w-16 h-16 rounded-2xl bg-emerald-100 flex items-center justify-center mx-auto mb-4">
+            <Icon name="person" size={32} className="text-emerald-600" strokeWidth={1.5} />
+          </div>
           <h2 className="text-2xl font-bold text-gray-800 mb-1">학생 로그인</h2>
           <p className="text-gray-500 text-sm">이름을 입력하세요</p>
         </div>

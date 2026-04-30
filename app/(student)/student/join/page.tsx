@@ -1,9 +1,9 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, Suspense } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import Link from 'next/link'
-import { Suspense } from 'react'
+import Icon from '@/components/ui/Icon'
 
 function StudentJoinContent() {
   const router = useRouter()
@@ -90,7 +90,9 @@ function StudentJoinContent() {
       </Link>
 
       <div className="w-full max-w-xs text-center">
-        <div className="text-6xl mb-4">🎯</div>
+        <div className="w-16 h-16 rounded-2xl bg-emerald-100 flex items-center justify-center mx-auto mb-4">
+          <Icon name="enter" size={32} className="text-emerald-600" strokeWidth={1.5} />
+        </div>
         <h2 className="text-2xl font-bold text-gray-800 mb-1">세션 입장</h2>
         <p className="text-gray-500 mb-8">선생님이 알려준 6자리 코드를 입력하세요</p>
 
@@ -137,9 +139,9 @@ function StudentJoinContent() {
           <button
             onClick={handleDelete}
             disabled={loading}
-            className="h-16 text-2xl bg-white border border-gray-200 rounded-2xl hover:bg-red-50 active:bg-red-100 active:scale-95 transition-all duration-75 shadow-sm disabled:opacity-50"
+            className="h-16 flex items-center justify-center bg-white border border-gray-200 rounded-2xl hover:bg-red-50 active:bg-red-100 active:scale-95 transition-all duration-75 shadow-sm disabled:opacity-50"
           >
-            ⌫
+            <Icon name="backspace" size={22} className="text-gray-500" />
           </button>
         </div>
 

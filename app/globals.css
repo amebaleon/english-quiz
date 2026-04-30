@@ -49,3 +49,31 @@
   from { width: 0%; }
 }
 .animate-fill-bar { animation: fill-bar 0.5s ease-out both; }
+
+/* 정답 배경 flash */
+@keyframes flash-correct {
+  0%   { opacity: 0; }
+  20%  { opacity: 1; }
+  100% { opacity: 0; }
+}
+.flash-correct { animation: flash-correct 0.7s ease-out both; }
+
+/* 오답 배경 flash */
+@keyframes flash-wrong {
+  0%   { opacity: 0; }
+  20%  { opacity: 1; }
+  100% { opacity: 0; }
+}
+.flash-wrong { animation: flash-wrong 0.7s ease-out both; }
+
+/* 포인트 획득 float-up */
+@keyframes float-up {
+  0%   { opacity: 1; transform: translateY(0) scale(1); }
+  100% { opacity: 0; transform: translateY(-56px) scale(1.2); }
+}
+.animate-float-up { animation: float-up 1s ease-out both; }
+
+/* 헤더 웨이브 보텀 */
+.header-wave {
+  border-radius: 0 0 2rem 2rem;
+}
