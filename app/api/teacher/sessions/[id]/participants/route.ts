@@ -11,7 +11,6 @@ export async function GET(_request: NextRequest, { params }: { params: Promise<{
       .from('session_participants')
       .select('student_id, users(name)')
       .eq('session_id', id)
-      .order('created_at', { ascending: true })
 
     if (error) return NextResponse.json({ success: false, error: error.message }, { status: 500 })
     return NextResponse.json({ success: true, data })
