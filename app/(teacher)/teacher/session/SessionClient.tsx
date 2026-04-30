@@ -209,8 +209,14 @@ export default function SessionClient({ quizzes, initialSession }: Props) {
     if (!session || !currentQ) return
     setLoading(true)
 
+    const statusPromise = fetch(`/api/teacher/sessions/${session.id}`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ status: 'revealed' }),
+    })
+
     if (currentQ.type === 'multiple') {
-      await fetch(`/api/teacher/sessions/${session.id}/award`, {
+      const awardPromise = fetch(`/api/teacher/sessions/${session.id}/award`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -219,14 +225,11 @@ export default function SessionClient({ quizzes, initialSession }: Props) {
           points: currentQ.points,
         }),
       })
-      await loadAnswers(session.id, currentQ.id)
+      await Promise.all([statusPromise, awardPromise])
+      loadAnswers(session.id, currentQ.id) // 비동기, 결과 대기 안 함
+    } else {
+      await statusPromise
     }
-
-    await fetch(`/api/teacher/sessions/${session.id}`, {
-      method: 'PATCH',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ status: 'revealed' }),
-    })
 
     setPhase('revealed')
     setLoading(false)

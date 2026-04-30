@@ -103,7 +103,7 @@ function StudentLoginContent() {
                 key={d}
                 onClick={() => handlePinInput(d)}
                 disabled={loading}
-                className="h-16 text-2xl font-semibold bg-white border border-gray-200 rounded-2xl hover:bg-emerald-50 active:bg-emerald-100 transition-colors shadow-sm disabled:opacity-50"
+                className="h-16 text-2xl font-semibold bg-white border border-gray-200 rounded-2xl hover:bg-emerald-50 active:bg-emerald-100 active:scale-95 transition-all duration-75 shadow-sm disabled:opacity-50"
               >
                 {d}
               </button>
@@ -119,7 +119,7 @@ function StudentLoginContent() {
             <button
               onClick={handlePinDelete}
               disabled={loading}
-              className="h-16 text-2xl bg-white border border-gray-200 rounded-2xl hover:bg-red-50 active:bg-red-100 transition-colors shadow-sm disabled:opacity-50"
+              className="h-16 text-2xl bg-white border border-gray-200 rounded-2xl hover:bg-red-50 active:bg-red-100 active:scale-95 transition-all duration-75 shadow-sm disabled:opacity-50"
             >
               ⌫
             </button>

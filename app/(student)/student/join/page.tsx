@@ -23,32 +23,29 @@ function StudentJoinContent() {
     const next = code + digit
     setCode(next)
     if (next.length === 6) {
-      setTimeout(async () => {
-        setError('')
-        setLoading(true)
-        try {
-          const res = await fetch('/api/student/session', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ code: next }),
-          })
-          const json = await res.json()
-          setLoading(false)
-          if (res.status === 401) {
-            router.push(`/student/login?next=${encodeURIComponent(`/student/join?code=${next}`)}`)
-            return
-          }
-          if (!json.success) {
-            setError(json.error ?? '세션을 찾을 수 없습니다.')
-            setCode('')
-            setShake(true)
-            setTimeout(() => setShake(false), 500)
-            if (typeof navigator !== 'undefined' && navigator.vibrate) navigator.vibrate([100, 50, 100])
-          } else {
-            router.push(`/student/quiz?session=${json.data.sessionId}`)
-          }
-        } catch { setLoading(false); setError('연결 오류') }
-      }, 150)
+      setError('')
+      setLoading(true)
+      fetch('/api/student/session', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ code: next }),
+      }).then(async res => {
+        const json = await res.json()
+        setLoading(false)
+        if (res.status === 401) {
+          router.push(`/student/login?next=${encodeURIComponent(`/student/join?code=${next}`)}`)
+          return
+        }
+        if (!json.success) {
+          setError(json.error ?? '세션을 찾을 수 없습니다.')
+          setCode('')
+          setShake(true)
+          setTimeout(() => setShake(false), 500)
+          if (typeof navigator !== 'undefined' && navigator.vibrate) navigator.vibrate([100, 50, 100])
+        } else {
+          router.push(`/student/quiz?session=${json.data.sessionId}`)
+        }
+      }).catch(() => { setLoading(false); setError('연결 오류') })
     }
   }
 
@@ -124,7 +121,7 @@ function StudentJoinContent() {
               key={d}
               onClick={() => handleInput(d)}
               disabled={loading}
-              className="h-16 text-2xl font-semibold bg-white border border-gray-200 rounded-2xl hover:bg-emerald-50 active:bg-emerald-100 transition-colors shadow-sm disabled:opacity-50"
+              className="h-16 text-2xl font-semibold bg-white border border-gray-200 rounded-2xl hover:bg-emerald-50 active:bg-emerald-100 active:scale-95 transition-all duration-75 shadow-sm disabled:opacity-50"
             >
               {d}
             </button>
@@ -133,14 +130,14 @@ function StudentJoinContent() {
           <button
             onClick={() => handleInput('0')}
             disabled={loading}
-            className="h-16 text-2xl font-semibold bg-white border border-gray-200 rounded-2xl hover:bg-emerald-50 active:bg-emerald-100 transition-colors shadow-sm disabled:opacity-50"
+            className="h-16 text-2xl font-semibold bg-white border border-gray-200 rounded-2xl hover:bg-emerald-50 active:bg-emerald-100 active:scale-95 transition-all duration-75 shadow-sm disabled:opacity-50"
           >
             0
           </button>
           <button
             onClick={handleDelete}
             disabled={loading}
-            className="h-16 text-2xl bg-white border border-gray-200 rounded-2xl hover:bg-red-50 active:bg-red-100 transition-colors shadow-sm disabled:opacity-50"
+            className="h-16 text-2xl bg-white border border-gray-200 rounded-2xl hover:bg-red-50 active:bg-red-100 active:scale-95 transition-all duration-75 shadow-sm disabled:opacity-50"
           >
             ⌫
           </button>

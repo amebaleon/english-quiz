@@ -326,7 +326,7 @@ function QuizContent() {
                 key={i}
                 onClick={() => handleSubmit(String(i))}
                 disabled={submitting}
-                className="w-full flex items-center gap-4 p-5 bg-white border-2 border-gray-200 hover:border-emerald-400 hover:bg-emerald-50 active:bg-emerald-100 rounded-2xl transition-colors text-left disabled:opacity-60"
+                className="w-full flex items-center gap-4 p-5 bg-white border-2 border-gray-200 hover:border-emerald-400 hover:bg-emerald-50 active:bg-emerald-100 active:scale-[0.98] rounded-2xl transition-all duration-75 text-left disabled:opacity-60"
               >
                 <span className="w-10 h-10 rounded-full bg-emerald-100 text-emerald-600 font-bold flex items-center justify-center shrink-0 text-lg">
                   {i + 1}
@@ -350,7 +350,7 @@ function QuizContent() {
             <button
               onClick={() => handleSubmit(input)}
               disabled={!input.trim() || submitting}
-              className="mt-4 w-full py-5 bg-emerald-500 hover:bg-emerald-600 disabled:bg-gray-200 disabled:text-gray-400 text-white font-bold text-xl rounded-2xl transition-colors"
+              className="mt-4 w-full py-5 bg-emerald-500 hover:bg-emerald-600 disabled:bg-gray-200 disabled:text-gray-400 text-white font-bold text-xl rounded-2xl active:scale-[0.98] transition-all duration-75"
             >
               {submitting ? '제출 중...' : '제출하기'}
             </button>
