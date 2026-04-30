@@ -51,12 +51,10 @@ export default function SessionClient({ quizzes, initialSession }: Props) {
 
   // 참가자 목록 로드
   const loadParticipants = useCallback(async (sessionId: string) => {
-    const { data } = await supabase
-      .from('session_participants')
-      .select('student_id, users(name)')
-      .eq('session_id', sessionId)
-    setParticipants((data as any) ?? [])
-  }, [supabase])
+    const res = await fetch(`/api/teacher/sessions/${sessionId}/participants`)
+    const json = await res.json()
+    if (json.success) setParticipants(json.data ?? [])
+  }, [])
 
   // 현재 문제 답변 로드
   const loadAnswers = useCallback(async (sessionId: string, questionId: string) => {
@@ -129,7 +127,7 @@ export default function SessionClient({ quizzes, initialSession }: Props) {
 
     ch.subscribe()
     channelRef.current = ch
-  }, [supabase, loadParticipants, loadAnswers])
+  }, [supabase, loadParticipants])
 
   useEffect(() => { setOrigin(window.location.origin) }, [])
 
