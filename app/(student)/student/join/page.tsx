@@ -23,15 +23,21 @@ function StudentJoinContent() {
     const next = code + digit
     setCode(next)
     if (next.length === 6) {
-      setTimeout(() => {
+      setTimeout(async () => {
         setError('')
         setLoading(true)
-        fetch('/api/student/session', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ code: next }),
-        }).then(r => r.json()).then(json => {
+        try {
+          const res = await fetch('/api/student/session', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ code: next }),
+          })
+          const json = await res.json()
           setLoading(false)
+          if (res.status === 401) {
+            router.push(`/student/login?next=${encodeURIComponent(`/student/join?code=${next}`)}`)
+            return
+          }
           if (!json.success) {
             setError(json.error ?? '세션을 찾을 수 없습니다.')
             setCode('')
@@ -41,7 +47,7 @@ function StudentJoinContent() {
           } else {
             router.push(`/student/quiz?session=${json.data.sessionId}`)
           }
-        }).catch(() => { setLoading(false); setError('연결 오류') })
+        } catch { setLoading(false); setError('연결 오류') }
       }, 150)
     }
   }
@@ -62,6 +68,11 @@ function StudentJoinContent() {
     })
     const json = await res.json()
     setLoading(false)
+
+    if (res.status === 401) {
+      router.push(`/student/login?next=${encodeURIComponent(`/student/join?code=${code}`)}`)
+      return
+    }
 
     if (!json.success) {
       setError(json.error ?? '세션을 찾을 수 없습니다.')

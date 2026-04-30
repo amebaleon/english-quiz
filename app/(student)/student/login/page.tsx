@@ -1,13 +1,15 @@
 'use client'
 
-import { useState, useEffect } from 'react'
-import { useRouter } from 'next/navigation'
+import { useState, useEffect, Suspense } from 'react'
+import { useRouter, useSearchParams } from 'next/navigation'
 import Link from 'next/link'
 
 type Step = 'name' | 'pin'
 
-export default function StudentLoginPage() {
+function StudentLoginContent() {
   const router = useRouter()
+  const searchParams = useSearchParams()
+  const nextUrl = searchParams.get('next') ?? '/student/home'
   const [step, setStep] = useState<Step>('name')
   const [name, setName] = useState('')
   const [pin, setPin] = useState('')
@@ -56,7 +58,7 @@ export default function StudentLoginPage() {
       return
     }
 
-    router.push('/student/home')
+    router.push(nextUrl)
   }
 
   if (step === 'pin') {
@@ -155,5 +157,17 @@ export default function StudentLoginPage() {
         </button>
       </div>
     </main>
+  )
+}
+
+export default function StudentLoginPage() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen flex items-center justify-center bg-emerald-50">
+        <p className="text-gray-400">불러오는 중...</p>
+      </div>
+    }>
+      <StudentLoginContent />
+    </Suspense>
   )
 }
