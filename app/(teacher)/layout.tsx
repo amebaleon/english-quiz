@@ -11,7 +11,7 @@ export default async function TeacherLayout({ children }: { children: React.Reac
   return (
     <div className="flex h-screen bg-gray-100">
       <TeacherSidebar />
-      <main className="flex-1 overflow-y-auto">
+      <main className="flex-1 overflow-y-auto animate-page-enter">
         {children}
       </main>
     </div>

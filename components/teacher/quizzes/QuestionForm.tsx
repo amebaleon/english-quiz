@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useRef } from 'react'
 
 export interface QuestionDraft {
   type: 'multiple' | 'short'
@@ -27,6 +27,8 @@ const EMPTY: QuestionDraft = {
 
 export default function QuestionForm({ initial, onSave, onCancel, saving }: Props) {
   const [form, setForm] = useState<QuestionDraft>({ ...EMPTY, ...initial })
+  const draggedIdx = useRef<number | null>(null)
+  const [dragOver, setDragOver] = useState<number | null>(null)
 
   function setField<K extends keyof QuestionDraft>(key: K, value: QuestionDraft[K]) {
     setForm(prev => ({ ...prev, [key]: value }))
@@ -37,6 +39,37 @@ export default function QuestionForm({ initial, onSave, onCancel, saving }: Prop
       const options = [...prev.options]
       options[index] = value
       return { ...prev, options }
+    })
+  }
+
+  function addOption() {
+    setForm(prev => ({ ...prev, options: [...prev.options, ''] }))
+  }
+
+  function removeOption(index: number) {
+    setForm(prev => {
+      if (prev.options.length <= 2) return prev
+      const options = prev.options.filter((_, i) => i !== index)
+      const ans = parseInt(prev.answer)
+      const newAns = isNaN(ans) ? 0 : ans === index ? 0 : ans > index ? ans - 1 : ans
+      return { ...prev, options, answer: String(Math.min(newAns, options.length - 1)) }
+    })
+  }
+
+  function moveOption(from: number, to: number) {
+    if (from === to) return
+    setForm(prev => {
+      const options = [...prev.options]
+      const [item] = options.splice(from, 1)
+      options.splice(to, 0, item)
+      const ans = parseInt(prev.answer)
+      let newAns = ans
+      if (!isNaN(ans)) {
+        if (ans === from) newAns = to
+        else if (from < to && ans > from && ans <= to) newAns = ans - 1
+        else if (from > to && ans >= to && ans < from) newAns = ans + 1
+      }
+      return { ...prev, options, answer: String(newAns) }
     })
   }
 
@@ -85,14 +118,37 @@ export default function QuestionForm({ initial, onSave, onCancel, saving }: Prop
       {/* 객관식 보기 */}
       {form.type === 'multiple' && (
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">보기 (정답 선택)</label>
+          <label className="block text-sm font-medium text-gray-700 mb-2">
+            보기 <span className="text-xs font-normal text-gray-400">번호 클릭 = 정답 · 드래그 = 순서 변경</span>
+          </label>
           <div className="space-y-2">
             {form.options.map((opt, i) => (
-              <div key={i} className="flex items-center gap-3">
+              <div
+                key={i}
+                draggable
+                onDragStart={() => { draggedIdx.current = i }}
+                onDragOver={e => { e.preventDefault(); setDragOver(i) }}
+                onDragLeave={() => setDragOver(null)}
+                onDrop={() => {
+                  if (draggedIdx.current !== null) moveOption(draggedIdx.current, i)
+                  draggedIdx.current = null
+                  setDragOver(null)
+                }}
+                onDragEnd={() => { draggedIdx.current = null; setDragOver(null) }}
+                className={`flex items-center gap-2 rounded-xl transition-colors ${
+                  dragOver === i ? 'bg-indigo-50 ring-2 ring-indigo-300' : ''
+                }`}
+              >
+                {/* 드래그 핸들 */}
+                <span className="cursor-grab active:cursor-grabbing text-gray-300 hover:text-gray-500 select-none px-0.5 text-lg leading-none shrink-0" title="드래그로 순서 변경">
+                  ⠿
+                </span>
+
+                {/* 정답 선택 버튼 */}
                 <button
                   type="button"
                   onClick={() => setField('answer', String(i))}
-                  className={`w-8 h-8 rounded-full border-2 flex items-center justify-center text-sm font-bold shrink-0 transition-colors ${
+                  className={`w-7 h-7 rounded-full border-2 flex items-center justify-center text-xs font-bold shrink-0 transition-colors ${
                     form.answer === String(i)
                       ? 'bg-indigo-600 border-indigo-600 text-white'
                       : 'border-gray-300 text-gray-400 hover:border-indigo-400'
@@ -100,6 +156,8 @@ export default function QuestionForm({ initial, onSave, onCancel, saving }: Prop
                 >
                   {i + 1}
                 </button>
+
+                {/* 선지 입력 */}
                 <input
                   value={opt}
                   onChange={e => setOption(i, e.target.value)}
@@ -107,10 +165,29 @@ export default function QuestionForm({ initial, onSave, onCancel, saving }: Prop
                   placeholder={`보기 ${i + 1}`}
                   className="flex-1 px-3 py-2 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 text-sm"
                 />
+
+                {/* 삭제 버튼 */}
+                <button
+                  type="button"
+                  onClick={() => removeOption(i)}
+                  disabled={form.options.length <= 2}
+                  title="선지 삭제"
+                  className="w-7 h-7 flex items-center justify-center text-gray-300 hover:text-red-400 disabled:opacity-20 disabled:cursor-not-allowed transition-colors shrink-0 rounded-lg hover:bg-red-50"
+                >
+                  ✕
+                </button>
               </div>
             ))}
           </div>
-          <p className="text-xs text-gray-400 mt-2">번호 클릭 → 정답 선택</p>
+
+          {/* 선지 추가 버튼 */}
+          <button
+            type="button"
+            onClick={addOption}
+            className="mt-3 w-full py-2 border-2 border-dashed border-gray-200 rounded-xl text-sm text-gray-400 hover:border-indigo-300 hover:text-indigo-500 hover:bg-indigo-50 transition-colors"
+          >
+            + 선지 추가
+          </button>
         </div>
       )}
 

@@ -18,13 +18,29 @@ interface SessionData {
   myAnswer: MyAnswer | null
 }
 
-// 객관식 보기 색상 (파스텔 4색)
+// 객관식 보기 색상 (파스텔, 최대 8선지)
 const OPTION = [
   { card: 'bg-rose-50   border-rose-200   hover:bg-rose-100   active:bg-rose-200',   badge: 'bg-rose-400',   label: 'text-rose-700'   },
   { card: 'bg-sky-50    border-sky-200    hover:bg-sky-100    active:bg-sky-200',    badge: 'bg-sky-500',    label: 'text-sky-700'    },
   { card: 'bg-amber-50  border-amber-200  hover:bg-amber-100  active:bg-amber-200',  badge: 'bg-amber-400',  label: 'text-amber-700'  },
   { card: 'bg-violet-50 border-violet-200 hover:bg-violet-100 active:bg-violet-200', badge: 'bg-violet-400', label: 'text-violet-700' },
+  { card: 'bg-emerald-50 border-emerald-200 hover:bg-emerald-100 active:bg-emerald-200', badge: 'bg-emerald-500', label: 'text-emerald-700' },
+  { card: 'bg-orange-50 border-orange-200 hover:bg-orange-100 active:bg-orange-200', badge: 'bg-orange-400', label: 'text-orange-700' },
+  { card: 'bg-pink-50   border-pink-200   hover:bg-pink-100   active:bg-pink-200',   badge: 'bg-pink-400',   label: 'text-pink-700'   },
+  { card: 'bg-teal-50   border-teal-200   hover:bg-teal-100   active:bg-teal-200',   badge: 'bg-teal-500',   label: 'text-teal-700'   },
 ]
+
+function optionGridClass(count: number) {
+  if (count <= 2) return 'grid grid-cols-2 gap-3 flex-1'
+  if (count === 3) return 'grid grid-cols-1 gap-3 flex-1'
+  return 'grid grid-cols-2 gap-3 flex-1'
+}
+
+function optionMinHeight(count: number) {
+  if (count <= 2) return 'min-h-[140px]'
+  if (count === 3) return 'min-h-[80px]'
+  return 'min-h-[110px]'
+}
 
 function QuizContent() {
   const searchParams = useSearchParams()
@@ -389,17 +405,17 @@ function QuizContent() {
 
       {/* 답변 영역 */}
       <div className="flex-1 px-5 pb-6 flex flex-col">
-        {/* 객관식: 2×2 파스텔 그리드 */}
+        {/* 객관식: 가변 파스텔 그리드 */}
         {q.type === 'multiple' && q.options && (
-          <div className="grid grid-cols-2 gap-3 flex-1">
+          <div className={optionGridClass(q.options.length)}>
             {q.options.map((opt, i) => {
-              const s = OPTION[i] ?? OPTION[3]
+              const s = OPTION[i % OPTION.length]
               return (
                 <button
                   key={i}
                   onClick={() => handleSubmit(String(i))}
                   disabled={submitting}
-                  className={`flex flex-col items-start gap-2 p-4 rounded-2xl border-2 active:scale-[0.96] transition-all duration-75 disabled:opacity-60 min-h-[110px] ${s.card}`}
+                  className={`flex flex-col items-start gap-2 p-4 rounded-2xl border-2 active:scale-[0.96] transition-all duration-75 disabled:opacity-60 ${optionMinHeight(q.options!.length)} ${s.card}`}
                 >
                   <span className={`w-7 h-7 rounded-full ${s.badge} text-white text-sm font-black flex items-center justify-center shrink-0`}>
                     {i + 1}

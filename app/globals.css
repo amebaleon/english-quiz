@@ -77,3 +77,24 @@
 .header-wave {
   border-radius: 0 0 2rem 2rem;
 }
+
+/* 사이드바 왼쪽에서 슬라이드인 */
+@keyframes slide-in-left {
+  from { opacity: 0; transform: translateX(-100%); }
+  to   { opacity: 1; transform: translateX(0); }
+}
+.animate-sidebar-in { animation: slide-in-left 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94) both; }
+
+/* 네비게이션 아이템 순차 등장 */
+@keyframes nav-item-in {
+  from { opacity: 0; transform: translateX(-12px); }
+  to   { opacity: 1; transform: translateX(0); }
+}
+.animate-nav-item { animation: nav-item-in 0.25s ease-out both; }
+
+/* 페이지 콘텐츠 전환 */
+@keyframes page-enter {
+  from { opacity: 0; transform: translateY(6px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+.animate-page-enter { animation: page-enter 0.2s ease-out both; }
