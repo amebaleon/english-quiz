@@ -12,6 +12,7 @@
 | POST | `/api/student/answer` | 답변 제출 | cookie |
 | GET | `/api/student/results?session_id=` | 세션 종료 후 전체 순위 조회 | cookie |
 | GET | `/api/student/list` | 반별 학생 목록 (프로필용) | cookie |
+| PATCH | `/api/student/pin` | 현재 PIN 확인 후 새 PIN으로 변경 | cookie |
 
 ## 선생님 (Teacher) API
 
