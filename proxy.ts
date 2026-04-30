@@ -39,7 +39,9 @@ export async function proxy(request: NextRequest) {
   ) {
     const studentId = request.cookies.get('student_id')?.value
     if (!studentId) {
-      return NextResponse.redirect(new URL('/student/login', request.url))
+      const loginUrl = new URL('/student/login', request.url)
+      loginUrl.searchParams.set('next', pathname + request.nextUrl.search)
+      return NextResponse.redirect(loginUrl)
     }
   }
 
