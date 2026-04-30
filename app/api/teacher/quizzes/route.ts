@@ -8,7 +8,7 @@ export async function GET() {
     const service = await createServiceClient()
     const { data, error } = await service
       .from('quizzes')
-      .select('id, title, created_at, questions(count)')
+      .select('id, title, category, created_at, questions(count)')
       .order('created_at', { ascending: false })
 
     if (error) return NextResponse.json({ success: false, error: error.message }, { status: 500 })
@@ -21,14 +21,14 @@ export async function GET() {
 export async function POST(request: NextRequest) {
   try {
     await assertTeacher()
-    const { title } = await request.json()
+    const { title, category } = await request.json()
     if (!title?.trim()) return NextResponse.json({ success: false, error: '제목을 입력하세요.' }, { status: 400 })
 
     const service = await createServiceClient()
     const { data, error } = await service
       .from('quizzes')
-      .insert({ title: title.trim() })
-      .select('id, title, created_at')
+      .insert({ title: title.trim(), category: (category ?? '기타').trim() || '기타' })
+      .select('id, title, category, created_at')
       .single()
 
     if (error) return NextResponse.json({ success: false, error: error.message }, { status: 500 })
