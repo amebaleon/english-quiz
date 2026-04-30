@@ -17,7 +17,7 @@ export async function GET(request: NextRequest) {
 
     const { data: session } = await service
       .from('sessions')
-      .select('id, status, current_question_index, quiz_id')
+      .select('id, status, current_question_index, quiz_id, exam_mode')
       .eq('id', session_id)
       .single()
 

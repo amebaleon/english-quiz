@@ -10,7 +10,7 @@ export async function GET() {
     const service = await createServiceClient()
     const { data } = await service
       .from('sessions')
-      .select('id, quiz_id, code, status, current_question_index, created_at, quizzes(title)')
+      .select('id, quiz_id, code, status, current_question_index, exam_mode, created_at, quizzes(title)')
       .in('status', ['waiting', 'active'])
       .order('created_at', { ascending: false })
       .limit(1)
@@ -27,7 +27,7 @@ export async function GET() {
 export async function POST(request: NextRequest) {
   try {
     await assertTeacher()
-    const { quiz_id } = await request.json()
+    const { quiz_id, exam_mode } = await request.json()
     if (!quiz_id) return NextResponse.json({ success: false, error: '퀴즈를 선택하세요.' }, { status: 400 })
 
     const service = await createServiceClient()
@@ -48,8 +48,8 @@ export async function POST(request: NextRequest) {
 
     const { data, error } = await service
       .from('sessions')
-      .insert({ quiz_id, code, status: 'waiting', current_question_index: -1 })
-      .select('id, quiz_id, code, status, current_question_index, quizzes(title)')
+      .insert({ quiz_id, code, status: 'waiting', current_question_index: -1, exam_mode: !!exam_mode })
+      .select('id, quiz_id, code, status, current_question_index, exam_mode, quizzes(title)')
       .single()
 
     if (error) return NextResponse.json({ success: false, error: error.message }, { status: 500 })

@@ -46,8 +46,9 @@ CREATE TABLE IF NOT EXISTS public.sessions (
   quiz_id                uuid NOT NULL REFERENCES public.quizzes(id) ON DELETE CASCADE,
   code                   text NOT NULL UNIQUE,
   status                 text NOT NULL DEFAULT 'waiting'
-                           CHECK (status IN ('waiting', 'active', 'finished')),
+                           CHECK (status IN ('waiting', 'active', 'revealed', 'finished')),
   current_question_index integer NOT NULL DEFAULT -1,
+  exam_mode              boolean NOT NULL DEFAULT false,
   created_at             timestamptz NOT NULL DEFAULT now()
 );
 

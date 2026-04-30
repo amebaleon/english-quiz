@@ -13,7 +13,7 @@ interface Question {
 }
 interface MyAnswer { id: string; content: string; is_correct: boolean | null }
 interface SessionData {
-  session: { id: string; status: string; current_question_index: number }
+  session: { id: string; status: string; current_question_index: number; exam_mode?: boolean }
   question: Question | null
   myAnswer: MyAnswer | null
 }
@@ -341,6 +341,29 @@ function QuizContent() {
     )
   }
 
+  // ── 백지시험 제출 완료 ────────────────────────────────
+  if (submitted && data.session.exam_mode) {
+    return (
+      <div className="min-h-screen flex flex-col items-center justify-center bg-gray-800 p-6 safe-top safe-bottom text-center">
+        <div className="w-20 h-20 rounded-full bg-white/10 flex items-center justify-center mx-auto mb-5 animate-bounce-in">
+          <Icon name="check-circle" size={44} className="text-white" strokeWidth={1.5} />
+        </div>
+        <h2 className="text-2xl font-black text-white mb-1 animate-fade-in">제출 완료!</h2>
+        <p className="text-gray-400 text-sm mb-4">선생님의 채점을 기다리세요</p>
+        <div className="bg-white/10 rounded-xl px-5 py-3 mb-8">
+          <span className="text-gray-300 text-xs font-bold">내 답변 · </span>
+          <span className="text-white font-semibold">{submittedAnswer}</span>
+        </div>
+        <div className="flex gap-1.5">
+          {[0,1,2].map(i => (
+            <div key={i} className="w-2 h-2 bg-white/30 rounded-full animate-bounce" style={{ animationDelay: `${i * 0.18}s` }} />
+          ))}
+        </div>
+        <p className="text-gray-500 text-xs mt-2">다음 문제를 기다리는 중...</p>
+      </div>
+    )
+  }
+
   // ── 제출 완료 대기 ────────────────────────────────────
   if (submitted) {
     return (
@@ -353,11 +376,13 @@ function QuizContent() {
 
         <div className="w-full max-w-xs bg-white rounded-2xl border border-gray-100 shadow-sm p-5 animate-slide-up">
           <p className="text-xs text-gray-400 mb-2">문제 {data.session.current_question_index + 1}</p>
-          <p className="text-gray-700 font-medium text-sm leading-relaxed mb-3">{q.content}</p>
+          {!data.session.exam_mode && (
+            <p className="text-gray-700 font-medium text-sm leading-relaxed mb-3">{q.content}</p>
+          )}
           <div className="bg-emerald-50 rounded-xl px-3 py-2">
             <span className="text-xs text-emerald-500 font-bold">내 답변 · </span>
             <span className="text-emerald-700 font-semibold text-sm">
-              {q.type === 'multiple' && q.options
+              {!data.session.exam_mode && q.type === 'multiple' && q.options
                 ? q.options[parseInt(submittedAnswer)] ?? submittedAnswer
                 : submittedAnswer}
             </span>
@@ -370,6 +395,43 @@ function QuizContent() {
           ))}
         </div>
         <p className="text-gray-300 text-xs mt-2">결과 발표를 기다리는 중...</p>
+      </div>
+    )
+  }
+
+  // ── 백지시험 모드 ─────────────────────────────────────
+  if (data.session.exam_mode) {
+    return (
+      <div className="min-h-screen flex flex-col bg-gray-50 safe-top safe-bottom">
+        <div className="bg-gray-800 px-5 py-4">
+          <div className="flex items-center justify-between">
+            <span className="bg-white/20 text-white text-sm font-bold px-3 py-1 rounded-full">
+              문제 {data.session.current_question_index + 1}번 진행 중
+            </span>
+            <span className="bg-white/10 text-gray-300 text-xs px-3 py-1 rounded-full">백지시험</span>
+          </div>
+        </div>
+
+        {error && (
+          <p className="mx-5 mt-4 text-red-500 text-sm bg-red-50 rounded-xl px-4 py-3">{error}</p>
+        )}
+
+        <div className="flex-1 px-5 py-6 flex flex-col">
+          <textarea
+            value={input}
+            onChange={e => setInput(e.target.value)}
+            placeholder="답을 입력하세요..."
+            rows={5}
+            className="w-full flex-1 px-5 py-4 border-2 border-gray-200 bg-white rounded-2xl focus:outline-none focus:border-gray-500 text-gray-800 text-lg resize-none"
+          />
+          <button
+            onClick={() => handleSubmit(input)}
+            disabled={!input.trim() || submitting}
+            className="mt-3 w-full py-5 bg-gray-800 hover:bg-gray-900 disabled:bg-gray-200 disabled:text-gray-400 text-white font-black text-xl rounded-2xl active:scale-[0.98] transition-all duration-75"
+          >
+            {submitting ? '제출 중...' : '제출하기'}
+          </button>
+        </div>
       </div>
     )
   }
