@@ -263,7 +263,7 @@ function GuideTab() {
         <h3 className="text-lg font-bold text-gray-800 mb-4 flex items-center gap-2">
           <span>👥</span> 학생 일괄 등록
         </h3>
-        <p className="text-sm text-gray-600 mb-3">학생 관리 > <Bold>일괄 등록</Bold>. CSV 파일, 엑셀 파일, 또는 텍스트 직접 붙여넣기를 지원합니다.</p>
+        <p className="text-sm text-gray-600 mb-3">학생 관리 {'>'}  <Bold>일괄 등록</Bold>. CSV 파일, 엑셀 파일, 또는 텍스트 직접 붙여넣기를 지원합니다.</p>
         <div className="bg-gray-50 rounded-xl p-4 font-mono text-sm text-gray-700 space-y-1">
           <p className="text-xs text-gray-400 mb-2 font-sans font-semibold">형식: 이름,PIN,반이름(선택)</p>
           <p>홍길동,1234,3학년A반</p>
