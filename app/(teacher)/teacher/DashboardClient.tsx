@@ -139,20 +139,20 @@ export default function DashboardClient({ studentCount, quizCount, recentSession
           <h3 className="font-semibold text-gray-700">최근 세션 <span className="text-xs text-gray-400 font-normal ml-1">클릭하면 상세 보기</span></h3>
         </div>
         {recentSessions.length > 0 ? (
-          <ul className="divide-y divide-gray-50">
+          <ul className="divide-y divide-gray-50 max-h-[280px] overflow-y-auto">
             {recentSessions.map(s => (
               <li
                 key={s.id}
                 onClick={() => openDetail(s.id)}
-                className="px-6 py-4 flex items-center justify-between cursor-pointer hover:bg-indigo-50 transition-colors"
+                className="px-6 py-3.5 flex items-center justify-between cursor-pointer hover:bg-indigo-50 transition-colors"
               >
                 <div>
-                  <p className="font-medium text-gray-800">{s.quizzes?.title ?? '(삭제된 퀴즈)'}</p>
-                  <p className="text-sm text-gray-400">
-                  코드: {s.code} · {new Date(s.created_at).toLocaleString('ko-KR', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })}
-                </p>
+                  <p className="font-medium text-gray-800 text-sm">{s.quizzes?.title ?? '(삭제된 퀴즈)'}</p>
+                  <p className="text-xs text-gray-400 mt-0.5">
+                    코드: {s.code} · {new Date(s.created_at).toLocaleString('ko-KR', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })}
+                  </p>
                 </div>
-                <span className={`text-xs font-medium px-3 py-1 rounded-full ${SESSION_STATUS_COLOR[s.status]}`}>
+                <span className={`text-xs font-medium px-3 py-1 rounded-full shrink-0 ml-3 ${SESSION_STATUS_COLOR[s.status]}`}>
                   {SESSION_STATUS_LABEL[s.status]}
                 </span>
               </li>

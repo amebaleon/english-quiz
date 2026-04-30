@@ -36,6 +36,7 @@ export default function Loading() {
       <div className="flex-1 space-y-4">
         {/* 문제 카드 */}
         <div className="bg-white rounded-2xl border border-gray-200 p-6">
+          {/* 필터 탭 */}
           <div className="flex gap-2 mb-5">
             <div className="h-6 w-16 bg-indigo-100 rounded-full" />
             <div className="h-6 w-12 bg-amber-100 rounded-full" />
@@ -52,11 +53,13 @@ export default function Loading() {
         </div>
         {/* 답변 현황 카드 */}
         <div className="bg-white rounded-2xl border border-gray-200 p-5">
-          <div className="h-5 w-24 bg-gray-200 rounded mb-4" />
-          <div className="h-2.5 bg-gray-100 rounded-full mb-4" />
+          <div className="flex gap-2 mb-4">
+            <div className="h-7 w-20 bg-indigo-100 rounded-lg" />
+            <div className="h-7 w-20 bg-gray-100 rounded-lg" />
+          </div>
           <div className="space-y-2">
-            {[1,2].map(i => (
-              <div key={i} className="h-12 bg-gray-50 rounded-xl border border-gray-100" />
+            {[1,2,3].map(i => (
+              <div key={i} className="h-10 bg-gray-50 rounded-xl border border-gray-100" />
             ))}
           </div>
         </div>
