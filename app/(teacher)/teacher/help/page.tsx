@@ -26,7 +26,8 @@ const HELP_ITEMS: HelpItem[] = [
   { tab: 'session', q: '키보드 단축키', body: 'Space 또는 → 키로 [정답 공개] 또는 [다음 문제]를 바로 누를 수 있습니다. 입력창에 포커스가 없을 때만 작동합니다.' },
   { tab: 'session', q: '객관식 자동 채점', body: '정답 공개 시 정답을 맞힌 학생에게 자동으로 포인트가 지급됩니다. 선생님이 따로 채점할 필요가 없습니다.' },
   { tab: 'session', q: '주관식 수동 채점', body: '정답 공개 후 학생 답변 옆의 ⭕/❌ 버튼으로 직접 채점합니다. 정답으로 채점하면 포인트가 즉시 지급됩니다.' },
-  { tab: 'session', q: '답변 현황 확인', body: '문제 진행 중 우측 하단에 제출 현황 바와 제출 학생 목록이 나타납니다. 미제출 학생 이름도 표시됩니다.' },
+  { tab: 'session', q: '답변 현황 확인', body: '문제 진행 중 제출/미제출 탭으로 학생을 구분해서 볼 수 있습니다. 정답 공개 후에는 정답/오답/미제출 탭으로 분류됩니다.' },
+  { tab: 'session', q: '현재 랭킹 확인', body: '세션 진행 중 참가자 카드 아래 "현재 랭킹 확인" 버튼을 누르면 실시간 점수 순위를 볼 수 있습니다.' },
   { tab: 'session', q: '문제 건너뛰기', body: '채점 없이 다음 문제로 넘어가려면 정답 공개 전 건너뛰기 버튼을 누릅니다.' },
   { tab: 'session', q: '세션 강제 종료', body: '대기 중이거나 진행 중인 세션을 중단하려면 왼쪽 하단 세션 종료 버튼을 누릅니다.' },
   { tab: 'session', q: '이미 진행 중인 세션 복원', body: '페이지를 새로고침하거나 다시 접속해도 진행 중인 세션이 자동으로 복원됩니다.' },
@@ -42,12 +43,14 @@ const HELP_ITEMS: HelpItem[] = [
   { tab: 'students', q: '반 삭제 시 학생은?', body: '반을 삭제해도 학생은 삭제되지 않습니다. 해당 학생들의 반이 "없음"으로 변경됩니다.' },
 
   // 퀴즈 관리
-  { tab: 'quiz', q: '엑셀로 문제 일괄 추가', body: '퀴즈 편집 > 엑셀 업로드 버튼. A: 문제, B~E: 선택지(객관식) / B: 정답(주관식), F: 정답번호(1~4, 객관식만), G: 포인트(비우면 10점)' },
-  { tab: 'quiz', q: '객관식 엑셀 형식', body: 'A: 문제 내용, B~E: 4개 선택지, F: 정답 번호(1~4), G: 포인트. 예) "사과의 영어는?" / apple / banana / cherry / grape / 1 / 10' },
-  { tab: 'quiz', q: '주관식 엑셀 형식', body: 'A: 문제 내용, B: 정답(키워드), G: 포인트. C~F는 비워둡니다. 주관식은 정답 키워드를 포함하면 정답으로 처리됩니다.' },
+  { tab: 'quiz', q: '엑셀로 문제 일괄 추가', body: '퀴즈 편집 > 엑셀 업로드 버튼. A열: 문제, B열: 선지수(1=주관식, 2이상=객관식, 비우면 자동인식), 그 뒤로 선지 → 정답 → 포인트 순서.' },
+  { tab: 'quiz', q: '엑셀 — 선지수 명시 방식', body: 'B열에 선지 개수를 적습니다. 1이면 주관식, 2이상이면 그 수만큼 선지가 이어집니다.\n\n예) 3선지 객관식: "사과는?" | 3 | apple | banana | cherry | 1 | 10\n예) 주관식: "apple의 뜻은?" | 1 | 사과 | 10' },
+  { tab: 'quiz', q: '엑셀 — 자동인식 방식 (B열 비워두기)', body: 'B열을 비워두면 마지막 2열(정답, 포인트)을 제외한 나머지를 선지로 자동 인식합니다.\n\n예) 자동 주관식: "dog의 뜻은?" | (빈칸) | 개 | 10\n예) 자동 2선지: "O/X?" | (빈칸) | O | X | 1 | 10\n예) 자동 3선지: "수도는?" | (빈칸) | 서울 | 도쿄 | 베이징 | 1 | 10' },
+  { tab: 'quiz', q: '기존 엑셀 파일은 어떻게 되나요?', body: '기존 형식(B~E에 4개 선지 고정)은 B열이 텍스트(선지 내용)이므로 자동인식 모드로 처리됩니다. 마지막 2열이 정답 번호와 포인트로 인식되어 정상 임포트됩니다.' },
+  { tab: 'quiz', q: '선지 개수를 다르게 만들 수 있나요?', body: '문제 편집 폼에서 "+ 선지 추가" 버튼으로 선지를 늘리거나, 각 선지 옆 ✕로 줄일 수 있습니다. 최소 2개, 제한 없이 추가 가능합니다.' },
+  { tab: 'quiz', q: '선지 순서 변경', body: '문제 편집 폼에서 각 선지 왼쪽 ⠿ 핸들을 드래그해서 순서를 바꿉니다. 정답 표시(파란 번호)가 자동으로 따라옵니다.' },
   { tab: 'quiz', q: '퀴즈 카테고리', body: '퀴즈 생성 시 카테고리를 설정하면 퀴즈 목록에서 탭으로 필터링됩니다. 카테고리: 문법, 어휘, 독해, 듣기, 회화, 쓰기, 기타 또는 직접 입력.' },
   { tab: 'quiz', q: '퀴즈 복제', body: '퀴즈 카드의 복제 버튼으로 퀴즈와 모든 문제를 복사합니다. 비슷한 퀴즈를 빠르게 만들 때 유용합니다.' },
-  { tab: 'quiz', q: '문제 순서 변경', body: '문제 편집 창에서 문제를 드래그해서 순서를 바꿀 수 있습니다. 저장은 자동입니다.' },
   { tab: 'quiz', q: '문제 삭제는 되돌릴 수 없음', body: '문제 삭제 시 복구가 불가능합니다. 해당 문제의 답변 기록도 함께 삭제됩니다.' },
 
   // 학생 질문 대응
@@ -65,7 +68,7 @@ const HELP_ITEMS: HelpItem[] = [
   { tab: 'troubleshoot', q: '페이지가 안 열려요 / 로딩이 너무 오래 걸려요', body: '① 인터넷 연결 확인 ② F5로 새로고침 ③ 크롬 브라우저 사용 권장 ④ 1~2주 이상 사용 안 했다면 DB 절전 모드 가능 → 1~2분 후 다시 시도' },
   { tab: 'troubleshoot', q: '선생님 로그인이 안 돼요', body: '이메일/비밀번호 확인. 비밀번호를 잊은 경우 Supabase 대시보드에서 리셋하거나 개발자에게 문의하세요.' },
   { tab: 'troubleshoot', q: '학생 추가했는데 목록에 안 보여요', body: '화면을 새로고침해보세요. 그래도 안 보이면 다시 추가해주세요.' },
-  { tab: 'troubleshoot', q: '엑셀 업로드가 안 됐어요', body: '형식이 안 맞는 행은 빨간 글씨로 표시됩니다. 가장 흔한 실수: 객관식인데 F열(정답번호)을 안 적거나, 1~4 외의 숫자를 적음.' },
+  { tab: 'troubleshoot', q: '엑셀 업로드가 안 됐어요', body: '형식이 안 맞는 행은 오류 메시지로 표시됩니다. 흔한 실수: 자동인식 모드에서 마지막 열이 숫자(포인트)가 아닌 경우, 또는 정답 번호가 선지 수 범위를 벗어난 경우.' },
   { tab: 'troubleshoot', q: '세션 시작했는데 학생이 못 들어와요', body: '① 6자리 코드가 정확한지 확인 ② 학생이 먼저 로그인했는지 확인 ③ 세션이 대기 중인지 확인 (이미 active면 입장 가능)' },
   { tab: 'troubleshoot', q: '실시간 업데이트가 안 돼요', body: '3초마다 자동 폴링이 작동하니 잠시 기다리면 됩니다. 아예 안 보이면 새로고침 후 세션이 복원됩니다.' },
   { tab: 'troubleshoot', q: '실수로 학생/퀴즈를 삭제했어요', body: '삭제는 되돌릴 수 없습니다. 학생은 다시 추가, 퀴즈는 다시 만들어야 합니다. ⚠ 삭제 전 확인 메시지를 꼭 확인하세요.' },
@@ -73,13 +76,13 @@ const HELP_ITEMS: HelpItem[] = [
   { tab: 'troubleshoot', q: '여전히 해결이 안 된다면', body: '개발자에게 ① 어떤 화면에서 ② 무슨 버튼을 눌렀을 때 ③ 어떤 메시지가 떴는지(캡처 권장) ④ 발생 시각을 알려주세요.' },
 ]
 
-const TABS: { key: Tab; label: string; emoji: string }[] = [
-  { key: 'guide', label: '시작 가이드', emoji: '🚀' },
-  { key: 'session', label: '세션 진행', emoji: '▶️' },
-  { key: 'students', label: '학생 관리', emoji: '👥' },
-  { key: 'quiz', label: '퀴즈 관리', emoji: '📝' },
-  { key: 'student-questions', label: '학생 질문 대응', emoji: '🙋' },
-  { key: 'troubleshoot', label: '문제 해결', emoji: '🔧' },
+const TABS: { key: Tab; label: string }[] = [
+  { key: 'guide', label: '시작 가이드' },
+  { key: 'session', label: '세션 진행' },
+  { key: 'students', label: '학생 관리' },
+  { key: 'quiz', label: '퀴즈 관리' },
+  { key: 'student-questions', label: '학생 질문 대응' },
+  { key: 'troubleshoot', label: '문제 해결' },
 ]
 
 export default function HelpPage() {
@@ -144,8 +147,8 @@ export default function HelpPage() {
               {searchResults.map((item, i) => {
                 const tabInfo = TABS.find(t => t.key === item.tab)
                 return (
-                  <FAQCard key={i} q={item.q} badge={tabInfo ? `${tabInfo.emoji} ${tabInfo.label}` : undefined}>
-                    {item.body}
+                  <FAQCard key={i} q={item.q} badge={tabInfo?.label}>
+                    <BodyText text={item.body} />
                   </FAQCard>
                 )
               })}
@@ -177,7 +180,9 @@ export default function HelpPage() {
           {tab !== 'guide' && (
             <div className="space-y-3">
               {tabItems.map((item, i) => (
-                <FAQCard key={i} q={item.q}>{item.body}</FAQCard>
+                <FAQCard key={i} q={item.q}>
+                  <BodyText text={item.body} />
+                </FAQCard>
               ))}
             </div>
           )}
@@ -187,7 +192,6 @@ export default function HelpPage() {
   )
 }
 
-// 시작 가이드는 단계별로 시각적으로 표현
 function GuideTab() {
   return (
     <div className="space-y-6">
@@ -219,43 +223,96 @@ function GuideTab() {
         </div>
       </section>
 
-      {/* 엑셀 형식 */}
+      {/* 엑셀 문제 추가 */}
       <section className="bg-white rounded-2xl border border-gray-200 p-6">
-        <h3 className="text-lg font-bold text-gray-800 mb-4 flex items-center gap-2">
+        <h3 className="text-lg font-bold text-gray-800 mb-1 flex items-center gap-2">
           <span>📑</span> 엑셀로 문제 일괄 추가
         </h3>
-        <p className="text-sm text-gray-600 mb-4">퀴즈 편집 창 우측 상단 <Bold>엑셀 업로드</Bold> 버튼을 눌러 .xlsx 파일을 선택합니다.</p>
-        <div className="overflow-x-auto">
-          <table className="w-full text-sm border-collapse min-w-[480px]">
+        <p className="text-sm text-gray-500 mb-4">퀴즈 편집 창 우측 상단 <Bold>엑셀 업로드</Bold> 버튼 → .xlsx 파일 선택</p>
+
+        {/* 열 구조 설명 */}
+        <div className="overflow-x-auto mb-5">
+          <table className="w-full text-sm border-collapse min-w-[560px]">
             <thead>
               <tr className="bg-indigo-50">
-                <th className="border border-gray-200 px-3 py-2 text-indigo-700 font-semibold">A열</th>
-                <th className="border border-gray-200 px-3 py-2 text-indigo-700 font-semibold">B열</th>
-                <th className="border border-gray-200 px-3 py-2 text-indigo-700 font-semibold">C열</th>
-                <th className="border border-gray-200 px-3 py-2 text-indigo-700 font-semibold">D열</th>
-                <th className="border border-gray-200 px-3 py-2 text-indigo-700 font-semibold">E열</th>
-                <th className="border border-gray-200 px-3 py-2 text-indigo-700 font-semibold">F열</th>
-                <th className="border border-gray-200 px-3 py-2 text-indigo-700 font-semibold">G열</th>
+                <th className="border border-gray-200 px-3 py-2 text-indigo-700 font-semibold text-left">열</th>
+                <th className="border border-gray-200 px-3 py-2 text-indigo-700 font-semibold text-left">내용</th>
+                <th className="border border-gray-200 px-3 py-2 text-indigo-700 font-semibold text-left">비고</th>
               </tr>
             </thead>
-            <tbody className="text-center">
+            <tbody className="text-sm text-gray-700">
               <tr className="bg-white">
-                <td className="border border-gray-200 px-2 py-2 font-medium">문제 내용</td>
-                <td className="border border-gray-200 px-2 py-2">선택지1<br /><span className="text-xs text-gray-400">또는 주관식 정답</span></td>
-                <td className="border border-gray-200 px-2 py-2">선택지2</td>
-                <td className="border border-gray-200 px-2 py-2">선택지3</td>
-                <td className="border border-gray-200 px-2 py-2">선택지4</td>
-                <td className="border border-gray-200 px-2 py-2">정답 번호<br /><span className="text-xs text-gray-400">(1~4, 객관식만)</span></td>
-                <td className="border border-gray-200 px-2 py-2">포인트<br /><span className="text-xs text-gray-400">(비우면 10점)</span></td>
+                <td className="border border-gray-200 px-3 py-2 font-semibold">A열</td>
+                <td className="border border-gray-200 px-3 py-2">문제 내용</td>
+                <td className="border border-gray-200 px-3 py-2 text-gray-400">필수</td>
+              </tr>
+              <tr className="bg-gray-50">
+                <td className="border border-gray-200 px-3 py-2 font-semibold">B열</td>
+                <td className="border border-gray-200 px-3 py-2">선지 수</td>
+                <td className="border border-gray-200 px-3 py-2 text-gray-500">1=주관식 · 2이상=객관식 · <span className="text-indigo-500">비우면 자동인식</span></td>
+              </tr>
+              <tr className="bg-white">
+                <td className="border border-gray-200 px-3 py-2 font-semibold">C~열</td>
+                <td className="border border-gray-200 px-3 py-2">선지 내용</td>
+                <td className="border border-gray-200 px-3 py-2 text-gray-400">객관식일 때 선지 수만큼</td>
+              </tr>
+              <tr className="bg-gray-50">
+                <td className="border border-gray-200 px-3 py-2 font-semibold">다음 열</td>
+                <td className="border border-gray-200 px-3 py-2">정답</td>
+                <td className="border border-gray-200 px-3 py-2 text-gray-400">객관식: 1부터 시작하는 번호 · 주관식: 정답 텍스트</td>
+              </tr>
+              <tr className="bg-white">
+                <td className="border border-gray-200 px-3 py-2 font-semibold">마지막 열</td>
+                <td className="border border-gray-200 px-3 py-2">포인트</td>
+                <td className="border border-gray-200 px-3 py-2 text-gray-400">생략 시 기본 10점</td>
               </tr>
             </tbody>
           </table>
         </div>
-        <ul className="mt-4 space-y-1.5 text-sm text-gray-600">
-          <li className="flex items-start gap-2"><span className="text-emerald-500 mt-0.5 shrink-0">✓</span><span><Bold>객관식</Bold>: A에 문제, B~E에 4개 선택지, F에 정답 번호(1~4), G에 포인트</span></li>
-          <li className="flex items-start gap-2"><span className="text-emerald-500 mt-0.5 shrink-0">✓</span><span><Bold>주관식</Bold>: A에 문제, B에 정답 키워드, G에 포인트. C~F는 비웁니다</span></li>
-          <li className="flex items-start gap-2"><span className="text-amber-500 mt-0.5 shrink-0">⚠</span><span>형식이 안 맞는 행은 빨간 글씨로 알려줍니다. 맞는 행만 정상 추가됩니다</span></li>
-        </ul>
+
+        {/* 예시 */}
+        <div className="space-y-4">
+          <ExcelExample
+            title="B열 명시 — 주관식 (B=1)"
+            color="emerald"
+            rows={[
+              ['apple의 뜻은?', '1', '사과', '10'],
+              ['dog의 뜻은?', '1', '개', '5'],
+            ]}
+            headers={['A: 문제', 'B: 선지수', 'C: 정답', 'D: 포인트']}
+          />
+          <ExcelExample
+            title="B열 명시 — 2선지 객관식 (B=2)"
+            color="sky"
+            rows={[
+              ['파리는 어느 나라 수도?', '2', 'France', 'Germany', '1', '10'],
+            ]}
+            headers={['A: 문제', 'B: 선지수', 'C: 선지1', 'D: 선지2', 'E: 정답번호', 'F: 포인트']}
+          />
+          <ExcelExample
+            title="B열 명시 — 4선지 객관식 (B=4)"
+            color="violet"
+            rows={[
+              ['사과의 영어는?', '4', 'apple', 'banana', 'cherry', 'grape', '1', '10'],
+            ]}
+            headers={['A: 문제', 'B: 선지수', 'C~F: 선지', '', '', '', 'G: 정답번호', 'H: 포인트']}
+          />
+          <ExcelExample
+            title="B열 비워두기 — 자동인식"
+            color="amber"
+            rows={[
+              ['apple의 뜻은?', '', '사과', '10', '', '', '', ''],
+              ['수도는?', '', '서울', '도쿄', '베이징', '1', '10', ''],
+              ['What is 2+2?', '', 'A:1', 'B:2', 'C:4', 'D:8', '3', '5'],
+            ]}
+            headers={['A: 문제', 'B: (빈칸)', 'C~: 선지들 or 정답', '...', '...', '...', '끝에서2번째: 정답', '마지막: 포인트']}
+            note="B열이 비면 마지막 2열을 정답·포인트로 보고, 그 앞이 선지. 선지 0개면 주관식."
+          />
+        </div>
+
+        <p className="mt-4 text-xs text-amber-600 bg-amber-50 rounded-lg px-3 py-2">
+          💡 형식이 맞지 않는 행은 오류 메시지로 표시되고 해당 행만 건너뜁니다. 나머지는 정상 추가됩니다.
+        </p>
       </section>
 
       {/* 학생 일괄 등록 */}
@@ -263,7 +320,7 @@ function GuideTab() {
         <h3 className="text-lg font-bold text-gray-800 mb-4 flex items-center gap-2">
           <span>👥</span> 학생 일괄 등록
         </h3>
-        <p className="text-sm text-gray-600 mb-3">학생 관리 {'>'}  <Bold>일괄 등록</Bold>. CSV 파일, 엑셀 파일, 또는 텍스트 직접 붙여넣기를 지원합니다.</p>
+        <p className="text-sm text-gray-600 mb-3">학생 관리 {'>'} <Bold>일괄 등록</Bold>. CSV 파일, 엑셀 파일, 또는 텍스트 직접 붙여넣기를 지원합니다.</p>
         <div className="bg-gray-50 rounded-xl p-4 font-mono text-sm text-gray-700 space-y-1">
           <p className="text-xs text-gray-400 mb-2 font-sans font-semibold">형식: 이름,PIN,반이름(선택)</p>
           <p>홍길동,1234,3학년A반</p>
@@ -305,6 +362,52 @@ function GuideTab() {
   )
 }
 
+type ExColor = 'emerald' | 'sky' | 'violet' | 'amber'
+const COLOR_MAP: Record<ExColor, { header: string; row: string; badge: string }> = {
+  emerald: { header: 'bg-emerald-50 text-emerald-700', row: 'bg-white', badge: 'bg-emerald-100 text-emerald-700' },
+  sky:     { header: 'bg-sky-50 text-sky-700',         row: 'bg-white', badge: 'bg-sky-100 text-sky-700' },
+  violet:  { header: 'bg-violet-50 text-violet-700',   row: 'bg-white', badge: 'bg-violet-100 text-violet-700' },
+  amber:   { header: 'bg-amber-50 text-amber-700',     row: 'bg-white', badge: 'bg-amber-100 text-amber-700' },
+}
+
+function ExcelExample({ title, color, rows, headers, note }: {
+  title: string
+  color: ExColor
+  rows: string[][]
+  headers: string[]
+  note?: string
+}) {
+  const c = COLOR_MAP[color]
+  return (
+    <div className="rounded-xl border border-gray-100 overflow-hidden">
+      <div className={`px-4 py-2 text-xs font-semibold ${c.badge}`}>{title}</div>
+      <div className="overflow-x-auto">
+        <table className="w-full text-xs border-collapse">
+          <thead>
+            <tr className={c.header}>
+              {headers.map((h, i) => (
+                <th key={i} className="border border-gray-200 px-2 py-1.5 font-medium whitespace-nowrap">{h}</th>
+              ))}
+            </tr>
+          </thead>
+          <tbody>
+            {rows.map((row, ri) => (
+              <tr key={ri} className={c.row}>
+                {row.map((cell, ci) => (
+                  <td key={ci} className={`border border-gray-100 px-2 py-1.5 text-center font-mono ${cell === '' ? 'text-gray-200' : 'text-gray-700'}`}>
+                    {cell === '' ? '—' : cell}
+                  </td>
+                ))}
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+      {note && <p className="px-4 py-2 text-xs text-gray-400 bg-gray-50 border-t border-gray-100">{note}</p>}
+    </div>
+  )
+}
+
 function FAQCard({ q, children, badge }: { q: string; children: React.ReactNode; badge?: string }) {
   const [open, setOpen] = useState(false)
   return (
@@ -327,6 +430,20 @@ function FAQCard({ q, children, badge }: { q: string; children: React.ReactNode;
         </div>
       )}
     </div>
+  )
+}
+
+function BodyText({ text }: { text: string }) {
+  return (
+    <>
+      {text.split('\n\n').map((block, i) => (
+        <p key={i} className={i > 0 ? 'mt-2' : ''}>
+          {block.split('\n').map((line, j) => (
+            <span key={j}>{line}{j < block.split('\n').length - 1 && <br />}</span>
+          ))}
+        </p>
+      ))}
+    </>
   )
 }
 
