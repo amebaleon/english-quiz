@@ -6,6 +6,7 @@ import Tutorial from '@/components/teacher/Tutorial'
 import * as XLSX from 'xlsx'
 import { SESSION_STATUS_LABEL, SESSION_STATUS_COLOR } from '@/lib/constants'
 import type { SessionStatus } from '@/lib/types/database'
+import Icon from '@/components/ui/Icon'
 
 interface Session {
   id: string
@@ -106,17 +107,29 @@ export default function DashboardClient({ studentCount, quizCount, recentSession
 
       {/* 빠른 메뉴 */}
       <div className="grid grid-cols-3 gap-4 mb-8 max-w-2xl">
-        <Link href="/teacher/session" className="bg-indigo-600 hover:bg-indigo-700 text-white rounded-2xl p-6 text-center transition-colors shadow-sm">
-          <div className="text-3xl mb-2">▶️</div>
-          <div className="font-semibold">세션 시작</div>
+        <Link href="/teacher/session" className="bg-indigo-600 hover:bg-indigo-700 text-white rounded-2xl p-6 text-center transition-colors shadow-sm group">
+          <div className="flex justify-center mb-3">
+            <div className="w-12 h-12 bg-white/20 rounded-xl flex items-center justify-center group-hover:bg-white/30 transition-colors">
+              <Icon name="play" size={24} className="text-white translate-x-0.5" strokeWidth={1.5} />
+            </div>
+          </div>
+          <div className="font-semibold text-sm">세션 시작</div>
         </Link>
-        <Link href="/teacher/quizzes" className="bg-white hover:bg-gray-50 border border-gray-200 rounded-2xl p-6 text-center transition-colors shadow-sm">
-          <div className="text-3xl mb-2">📝</div>
-          <div className="font-semibold text-gray-700">퀴즈 만들기</div>
+        <Link href="/teacher/quizzes" className="bg-white hover:bg-gray-50 border border-gray-200 rounded-2xl p-6 text-center transition-colors shadow-sm group">
+          <div className="flex justify-center mb-3">
+            <div className="w-12 h-12 bg-indigo-50 rounded-xl flex items-center justify-center group-hover:bg-indigo-100 transition-colors">
+              <Icon name="pencil" size={22} className="text-indigo-500" strokeWidth={1.5} />
+            </div>
+          </div>
+          <div className="font-semibold text-sm text-gray-700">퀴즈 만들기</div>
         </Link>
-        <Link href="/teacher/students" className="bg-white hover:bg-gray-50 border border-gray-200 rounded-2xl p-6 text-center transition-colors shadow-sm">
-          <div className="text-3xl mb-2">👥</div>
-          <div className="font-semibold text-gray-700">학생 관리</div>
+        <Link href="/teacher/students" className="bg-white hover:bg-gray-50 border border-gray-200 rounded-2xl p-6 text-center transition-colors shadow-sm group">
+          <div className="flex justify-center mb-3">
+            <div className="w-12 h-12 bg-emerald-50 rounded-xl flex items-center justify-center group-hover:bg-emerald-100 transition-colors">
+              <Icon name="users" size={24} className="text-emerald-600" strokeWidth={1.5} />
+            </div>
+          </div>
+          <div className="font-semibold text-sm text-gray-700">학생 관리</div>
         </Link>
       </div>
 
@@ -135,7 +148,9 @@ export default function DashboardClient({ studentCount, quizCount, recentSession
               >
                 <div>
                   <p className="font-medium text-gray-800">{s.quizzes?.title ?? '(삭제된 퀴즈)'}</p>
-                  <p className="text-sm text-gray-400">코드: {s.code} · {new Date(s.created_at).toLocaleDateString('ko-KR')}</p>
+                  <p className="text-sm text-gray-400">
+                  코드: {s.code} · {new Date(s.created_at).toLocaleString('ko-KR', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })}
+                </p>
                 </div>
                 <span className={`text-xs font-medium px-3 py-1 rounded-full ${SESSION_STATUS_COLOR[s.status]}`}>
                   {SESSION_STATUS_LABEL[s.status]}
@@ -160,7 +175,7 @@ export default function DashboardClient({ studentCount, quizCount, recentSession
                   <div>
                     <h3 className="text-lg font-bold text-gray-800">{detail.session.quizTitle}</h3>
                     <p className="text-sm text-gray-400 mt-0.5">
-                      코드: {detail.session.code} · {new Date(detail.session.createdAt).toLocaleDateString('ko-KR')} · 문제 {detail.session.totalQuestions}개
+                      코드: {detail.session.code} · {new Date(detail.session.createdAt).toLocaleString('ko-KR', { year: 'numeric', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })} · 문제 {detail.session.totalQuestions}개
                     </p>
                   </div>
                   <div className="flex items-center gap-2 ml-4">
