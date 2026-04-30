@@ -22,6 +22,7 @@ function QuizContent() {
   const sessionId = searchParams.get('session')
   const [data, setData] = useState<SessionData | null>(null)
   const [input, setInput] = useState('')
+  const [submittedAnswer, setSubmittedAnswer] = useState('')
   const [submitted, setSubmitted] = useState(false)
   const [submitting, setSubmitting] = useState(false)
   const [error, setError] = useState('')
@@ -47,10 +48,12 @@ function QuizContent() {
         if (q && q.id !== currentQIdRef.current) {
           currentQIdRef.current = q.id
           setSubmitted(!!myAns)
+          setSubmittedAnswer(myAns?.content ?? '')
           setInput('')
           setError('')
         } else if (myAns) {
           setSubmitted(true)
+          setSubmittedAnswer(prev => prev || myAns.content)
         }
       }
     } catch {
@@ -117,6 +120,7 @@ function QuizContent() {
     setSubmitting(false)
     if (!json.success) { setError(json.error); return }
     setSubmitted(true)
+    setSubmittedAnswer(answer)
   }
 
   if (!sessionId) {
@@ -282,8 +286,8 @@ function QuizContent() {
           <p className="text-gray-700 font-medium text-sm leading-relaxed">{q.content}</p>
           <p className="mt-3 text-indigo-600 font-semibold text-sm">
             내 답변: {q.type === 'multiple' && q.options
-              ? q.options[parseInt(data.myAnswer?.content ?? input)] ?? data.myAnswer?.content ?? input
-              : data.myAnswer?.content ?? input}
+              ? q.options[parseInt(submittedAnswer)] ?? submittedAnswer
+              : submittedAnswer}
           </p>
         </div>
         <p className="text-gray-300 text-sm mt-8 animate-pulse">다음 문제를 기다리는 중...</p>

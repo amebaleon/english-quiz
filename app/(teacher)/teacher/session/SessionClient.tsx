@@ -151,6 +151,18 @@ export default function SessionClient({ quizzes, initialSession }: Props) {
     return () => { if (channelRef.current) supabase.removeChannel(channelRef.current) }
   }, [supabase])
 
+  // Realtime 누락 대비 폴링 fallback (3초)
+  useEffect(() => {
+    if (!session || phase === 'idle' || phase === 'finished') return
+    const id = setInterval(() => {
+      loadParticipants(session.id)
+      if ((phase === 'question' || phase === 'revealed') && currentQ) {
+        loadAnswers(session.id, currentQ.id)
+      }
+    }, 3000)
+    return () => clearInterval(id)
+  }, [session, phase, currentQ, loadParticipants, loadAnswers])
+
   // 세션 시작
   async function handleStartSession() {
     if (!selectedQuizId) { showToast('퀴즈를 선택하세요.', 'error'); return }
@@ -170,6 +182,7 @@ export default function SessionClient({ quizzes, initialSession }: Props) {
     setAnswers([])
     setParticipants([])
     await loadQuestions(newSession.quiz_id)
+    await loadParticipants(newSession.id)
     setupRealtime(newSession.id)
   }
 
