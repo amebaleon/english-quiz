@@ -41,6 +41,7 @@ export default function SessionClient({ quizzes, initialSession }: Props) {
       : 'idle'
   )
   const [examMode, setExamMode] = useState(initialSession?.exam_mode ?? false)
+  const [examQuestionCount, setExamQuestionCount] = useState(10)
   const [selectedQuizId, setSelectedQuizId] = useState('')
   const [questions, setQuestions] = useState<Question[]>([])
   const [currentQ, setCurrentQ] = useState<Question | null>(null)
@@ -208,12 +209,16 @@ export default function SessionClient({ quizzes, initialSession }: Props) {
 
   // 세션 시작
   async function handleStartSession() {
-    if (!selectedQuizId) { showToast('퀴즈를 선택하세요.', 'error'); return }
+    if (!examMode && !selectedQuizId) { showToast('퀴즈를 선택하세요.', 'error'); return }
     setLoading(true)
     const res = await fetch('/api/teacher/sessions', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ quiz_id: selectedQuizId, exam_mode: examMode }),
+      body: JSON.stringify({
+        quiz_id: examMode ? null : selectedQuizId,
+        exam_mode: examMode,
+        total_questions: examQuestionCount,
+      }),
     })
     const json = await res.json()
     setLoading(false)
@@ -358,61 +363,91 @@ export default function SessionClient({ quizzes, initialSession }: Props) {
       <div className="p-8 max-w-2xl">
         <h2 className="text-2xl font-bold text-gray-800 mb-6">세션 시작</h2>
 
-        {quizzes.length === 0 ? (
-          <div className="bg-white rounded-2xl border border-gray-200 p-10 text-center">
-            <p className="text-4xl mb-4">📝</p>
-            <p className="text-gray-500 mb-2">퀴즈가 없습니다.</p>
-            <p className="text-sm text-gray-400">먼저 퀴즈를 만들어 주세요.</p>
+        {/* 백지시험 모드 토글 */}
+        <div
+          onClick={() => setExamMode(v => !v)}
+          className={`flex items-center gap-3 px-4 py-3 rounded-2xl border-2 cursor-pointer transition-colors mb-5 ${
+            examMode ? 'border-gray-700 bg-gray-50' : 'border-gray-200 bg-white hover:border-gray-300'
+          }`}
+        >
+          <div className={`relative w-11 h-6 rounded-full transition-colors shrink-0 ${examMode ? 'bg-gray-800' : 'bg-gray-200'}`}>
+            <span className={`absolute top-0.5 left-0.5 w-5 h-5 bg-white rounded-full shadow transition-transform ${examMode ? 'translate-x-5' : ''}`} />
           </div>
-        ) : (
+          <div>
+            <p className="text-sm font-semibold text-gray-800">백지시험 모드</p>
+            <p className="text-xs text-gray-400">학생 화면에 문제 내용 숨김 — 선생님이 별도 화면에 투영</p>
+          </div>
+        </div>
+
+        {examMode ? (
+          /* 백지시험: 퀴즈 선택 불필요 */
           <div className="space-y-4">
-            {quizzes.map(quiz => {
-              const count = quiz.questions?.[0]?.count ?? 0
-              return (
-                <button
-                  key={quiz.id}
-                  onClick={() => setSelectedQuizId(quiz.id)}
-                  className={`w-full flex items-center justify-between p-5 rounded-2xl border-2 text-left transition-colors ${
-                    selectedQuizId === quiz.id
-                      ? 'border-indigo-500 bg-indigo-50'
-                      : 'border-gray-200 bg-white hover:border-indigo-300'
-                  }`}
-                >
-                  <div>
-                    <p className="font-semibold text-gray-800">{quiz.title}</p>
-                    <p className="text-sm text-gray-400 mt-0.5">{count}문제</p>
-                  </div>
-                  {selectedQuizId === quiz.id && (
-                    <span className="text-indigo-600 text-xl">✓</span>
-                  )}
-                </button>
-              )
-            })}
-
-            {/* 백지시험 모드 토글 */}
-            <div
-              onClick={() => setExamMode(v => !v)}
-              className={`flex items-center gap-3 px-4 py-3 rounded-2xl border-2 cursor-pointer transition-colors ${
-                examMode ? 'border-gray-700 bg-gray-50' : 'border-gray-200 bg-white hover:border-gray-300'
-              }`}
-            >
-              <div className={`relative w-11 h-6 rounded-full transition-colors shrink-0 ${examMode ? 'bg-gray-800' : 'bg-gray-200'}`}>
-                <span className={`absolute top-0.5 left-0.5 w-5 h-5 bg-white rounded-full shadow transition-transform ${examMode ? 'translate-x-5' : ''}`} />
-              </div>
+            <div className="bg-gray-50 border-2 border-gray-200 rounded-2xl p-5 flex items-center gap-5">
               <div>
-                <p className="text-sm font-semibold text-gray-800">백지시험 모드</p>
-                <p className="text-xs text-gray-400">학생 화면에 문제 내용 숨김 — 선생님이 별도 화면에 투영</p>
+                <p className="text-sm font-semibold text-gray-700 mb-2">총 문제 수</p>
+                <input
+                  type="number"
+                  value={examQuestionCount}
+                  onChange={e => setExamQuestionCount(Math.max(1, Math.min(50, Number(e.target.value) || 1)))}
+                  min={1} max={50}
+                  className="w-20 px-3 py-2 border border-gray-300 rounded-xl text-center font-mono text-lg focus:outline-none focus:ring-2 focus:ring-gray-400"
+                />
               </div>
+              <p className="text-xs text-gray-400 leading-relaxed">
+                학생 화면에는 답 입력창만 표시됩니다.<br />
+                선생님이 별도 화면(칠판·빔프로젝터 등)에<br />
+                문제를 직접 보여주세요.
+              </p>
             </div>
-
             <button
               onClick={handleStartSession}
-              disabled={!selectedQuizId || loading}
-              className="w-full py-4 bg-indigo-600 hover:bg-indigo-700 disabled:bg-indigo-300 text-white font-bold text-lg rounded-2xl transition-colors mt-2"
+              disabled={loading}
+              className="w-full py-4 bg-gray-800 hover:bg-gray-900 disabled:bg-gray-500 text-white font-bold text-lg rounded-2xl transition-colors"
             >
-              {loading ? '세션 생성 중...' : '▶ 세션 시작'}
+              {loading ? '세션 생성 중...' : '▶ 백지시험 시작'}
             </button>
           </div>
+        ) : (
+          /* 일반 모드: 퀴즈 선택 */
+          quizzes.length === 0 ? (
+            <div className="bg-white rounded-2xl border border-gray-200 p-10 text-center">
+              <p className="text-4xl mb-4">📝</p>
+              <p className="text-gray-500 mb-2">퀴즈가 없습니다.</p>
+              <p className="text-sm text-gray-400">먼저 퀴즈를 만들어 주세요.</p>
+            </div>
+          ) : (
+            <div className="space-y-4">
+              {quizzes.map(quiz => {
+                const count = quiz.questions?.[0]?.count ?? 0
+                return (
+                  <button
+                    key={quiz.id}
+                    onClick={() => setSelectedQuizId(quiz.id)}
+                    className={`w-full flex items-center justify-between p-5 rounded-2xl border-2 text-left transition-colors ${
+                      selectedQuizId === quiz.id
+                        ? 'border-indigo-500 bg-indigo-50'
+                        : 'border-gray-200 bg-white hover:border-indigo-300'
+                    }`}
+                  >
+                    <div>
+                      <p className="font-semibold text-gray-800">{quiz.title}</p>
+                      <p className="text-sm text-gray-400 mt-0.5">{count}문제</p>
+                    </div>
+                    {selectedQuizId === quiz.id && (
+                      <span className="text-indigo-600 text-xl">✓</span>
+                    )}
+                  </button>
+                )
+              })}
+              <button
+                onClick={handleStartSession}
+                disabled={!selectedQuizId || loading}
+                className="w-full py-4 bg-indigo-600 hover:bg-indigo-700 disabled:bg-indigo-300 text-white font-bold text-lg rounded-2xl transition-colors mt-2"
+              >
+                {loading ? '세션 생성 중...' : '▶ 세션 시작'}
+              </button>
+            </div>
+          )
         )}
 
         {toast && <Toast message={toast.msg} type={toast.type} onClose={clearToast} />}
@@ -579,12 +614,14 @@ export default function SessionClient({ quizzes, initialSession }: Props) {
                 </div>
               </div>
 
-              <p className="text-xl font-semibold text-gray-800 leading-relaxed mb-4">
-                {currentQ.content}
-              </p>
+              {!examMode && (
+                <p className="text-xl font-semibold text-gray-800 leading-relaxed mb-4">
+                  {currentQ.content}
+                </p>
+              )}
 
               {/* 객관식 보기 */}
-              {currentQ.type === 'multiple' && currentQ.options && (
+              {!examMode && currentQ.type === 'multiple' && currentQ.options && (
                 <div className="grid grid-cols-2 gap-2">
                   {currentQ.options.map((opt, i) => (
                     <div key={i} className={`px-4 py-3 rounded-xl border-2 text-sm font-medium transition-colors ${
@@ -601,8 +638,8 @@ export default function SessionClient({ quizzes, initialSession }: Props) {
                 </div>
               )}
 
-              {/* 주관식 정답 (공개 시만) */}
-              {phase === 'revealed' && currentQ.type === 'short' && (
+              {/* 주관식 정답 (공개 시만, 일반 모드) */}
+              {!examMode && phase === 'revealed' && currentQ.type === 'short' && (
                 <div className="bg-emerald-50 border border-emerald-200 rounded-xl px-4 py-3">
                   <span className="text-xs font-semibold text-emerald-600 block mb-0.5">참고 정답</span>
                   <span className="text-emerald-700 font-medium">{currentQ.answer}</span>
