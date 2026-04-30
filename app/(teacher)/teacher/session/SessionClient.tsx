@@ -444,7 +444,7 @@ export default function SessionClient({ quizzes, initialSession }: Props) {
         </div>
 
         {/* 세션 종료 버튼 */}
-        {phase !== 'waiting' && (
+        {(phase === 'waiting' || phase === 'question' || phase === 'revealed') && (
           <button
             onClick={handleEndSession}
             className="w-full py-2.5 border border-red-200 text-red-500 hover:bg-red-50 rounded-xl text-sm transition-colors"

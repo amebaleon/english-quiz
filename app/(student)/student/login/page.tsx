@@ -17,6 +17,12 @@ function StudentLoginContent() {
   const [loading, setLoading] = useState(false)
   const [shake, setShake] = useState(false)
 
+  useEffect(() => {
+    fetch('/api/student/profile').then(r => r.json()).then(json => {
+      if (json.success) router.replace(nextUrl)
+    })
+  }, [router, nextUrl])
+
   function handleNameNext() {
     if (!name.trim()) return
     setError('')

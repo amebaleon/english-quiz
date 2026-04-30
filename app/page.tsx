@@ -1,6 +1,17 @@
 import Link from 'next/link'
+import { redirect } from 'next/navigation'
+import { createClient } from '@/lib/supabase/server'
+import { cookies } from 'next/headers'
 
-export default function Home() {
+export default async function Home() {
+  const supabase = await createClient()
+  const { data: { user } } = await supabase.auth.getUser()
+  if (user) redirect('/teacher')
+
+  const cookieStore = await cookies()
+  const studentId = cookieStore.get('student_id')?.value
+  if (studentId) redirect('/student/home')
+
   return (
     <main className="min-h-screen flex flex-col items-center justify-center bg-gradient-to-br from-indigo-50 to-emerald-50 p-6">
       <div className="text-center mb-12">
