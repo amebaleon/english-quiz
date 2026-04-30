@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback, useRef } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import Toast from '@/components/ui/Toast'
+import Modal from '@/components/ui/Modal'
 import { useToast } from '@/lib/hooks/useToast'
 
 interface Quiz { id: string; title: string; questions: { count: number }[] }
@@ -27,6 +28,7 @@ interface Props {
 }
 
 type Phase = 'idle' | 'waiting' | 'question' | 'revealed' | 'finished'
+type AnswerFilter = 'submitted' | 'not-submitted' | 'correct' | 'wrong'
 
 export default function SessionClient({ quizzes, initialSession }: Props) {
   const [session, setSession] = useState<Session | null>(initialSession)
@@ -46,6 +48,10 @@ export default function SessionClient({ quizzes, initialSession }: Props) {
   const { toast, showToast, clearToast } = useToast()
   const [gradingAnswerId, setGradingAnswerId] = useState<string | null>(null)
   const [origin, setOrigin] = useState('')
+  const [answerFilter, setAnswerFilter] = useState<AnswerFilter>('submitted')
+  const [showRanking, setShowRanking] = useState(false)
+  const [rankingData, setRankingData] = useState<{ student_id: string; name: string; points: number }[]>([])
+  const [rankingLoading, setRankingLoading] = useState(false)
   const supabase = createClient()
   const channelRef = useRef<ReturnType<typeof supabase.channel> | null>(null)
   const actionsRef = useRef({ phase: 'idle' as Phase, loading: false, handleReveal: () => {}, handleNextQuestion: () => {} })
@@ -131,6 +137,21 @@ export default function SessionClient({ quizzes, initialSession }: Props) {
   }, [supabase, loadParticipants])
 
   useEffect(() => { setOrigin(window.location.origin) }, [])
+
+  // phase 변경 시 답변 필터 초기화
+  useEffect(() => {
+    if (phase === 'revealed') setAnswerFilter('correct')
+    else if (phase === 'question') setAnswerFilter('submitted')
+  }, [phase])
+
+  async function loadRanking() {
+    if (!session) return
+    setRankingLoading(true)
+    const res = await fetch(`/api/teacher/sessions/${session.id}/ranking`)
+    const json = await res.json()
+    setRankingLoading(false)
+    if (json.success) setRankingData(json.data)
+  }
 
   // 키보드 단축키: Space/→ = 정답공개 or 다음문제
   actionsRef.current = { phase, loading, handleReveal, handleNextQuestion }
@@ -463,6 +484,16 @@ export default function SessionClient({ quizzes, initialSession }: Props) {
           </div>
         </div>
 
+        {/* 현재 랭킹 확인 */}
+        {(phase === 'question' || phase === 'revealed') && (
+          <button
+            onClick={() => { setShowRanking(true); loadRanking() }}
+            className="w-full py-2.5 border border-indigo-200 text-indigo-600 hover:bg-indigo-50 rounded-xl text-sm font-medium transition-colors"
+          >
+            🏆 현재 랭킹 확인
+          </button>
+        )}
+
         {/* 세션 종료 버튼 */}
         {(phase === 'waiting' || phase === 'question' || phase === 'revealed') && (
           <button
@@ -562,94 +593,133 @@ export default function SessionClient({ quizzes, initialSession }: Props) {
             <div className="bg-white rounded-2xl border border-gray-200 p-5">
               <div className="flex items-center justify-between mb-3">
                 <h4 className="font-semibold text-gray-700">답변 현황</h4>
-                {phase === 'revealed' && submittedCount > 0 && (
-                  <p className="text-sm font-semibold text-emerald-600">
-                    정답 {correctCount}명 ({Math.round(correctCount / submittedCount * 100)}%)
-                  </p>
+                <span className="text-sm text-gray-400">{submittedCount}/{participants.length}명</span>
+              </div>
+
+              {/* 필터 탭 */}
+              <div className="flex gap-1.5 mb-4">
+                {phase === 'question' ? (
+                  <>
+                    {([
+                      ['submitted', `제출 ${submittedCount}`],
+                      ['not-submitted', `미제출 ${notSubmitted.length}`],
+                    ] as [AnswerFilter, string][]).map(([key, label]) => (
+                      <button key={key} onClick={() => setAnswerFilter(key)}
+                        className={`px-3 py-1 rounded-full text-xs font-semibold transition-colors ${
+                          answerFilter === key
+                            ? 'bg-indigo-600 text-white'
+                            : 'bg-gray-100 text-gray-500 hover:bg-gray-200'
+                        }`}>{label}</button>
+                    ))}
+                  </>
+                ) : (
+                  <>
+                    {([
+                      ['correct', `정답 ${correctCount}`],
+                      ['wrong', `오답/채점중 ${answers.filter(a => a.is_correct !== true).length}`],
+                      ['not-submitted', `미제출 ${notSubmitted.length}`],
+                    ] as [AnswerFilter, string][]).map(([key, label]) => (
+                      <button key={key} onClick={() => setAnswerFilter(key)}
+                        className={`px-3 py-1 rounded-full text-xs font-semibold transition-colors ${
+                          answerFilter === key
+                            ? key === 'correct' ? 'bg-emerald-500 text-white'
+                              : key === 'wrong' ? 'bg-red-500 text-white'
+                              : 'bg-gray-500 text-white'
+                            : 'bg-gray-100 text-gray-500 hover:bg-gray-200'
+                        }`}>{label}</button>
+                    ))}
+                  </>
                 )}
               </div>
 
-              {/* 제출 진행바 */}
-              {participants.length > 0 && (
-                <div className="mb-4">
-                  <div className="w-full bg-gray-100 rounded-full h-2.5 overflow-hidden">
-                    <div
-                      className={`h-2.5 rounded-full transition-all duration-500 ${
-                        submittedCount === participants.length && participants.length > 0
-                          ? 'bg-emerald-500' : 'bg-indigo-400'
-                      }`}
-                      style={{ width: `${participants.length > 0 ? Math.round(submittedCount / participants.length * 100) : 0}%` }}
-                    />
-                  </div>
-                  {phase === 'question' && notSubmitted.length > 0 && (
-                    <p className="text-xs text-amber-500 mt-1">미제출: {notSubmitted.map(p => (p.users as any)?.name).join(', ')}</p>
-                  )}
-                </div>
-              )}
-
-
-              {answers.length === 0 ? (
-                <p className="text-center text-gray-400 py-6 text-sm">아직 제출한 학생이 없습니다.</p>
-              ) : (
-                <div className="space-y-2">
-                  {answers.map(answer => {
-                    const name = (answer.users as any)?.name ?? '알 수 없음'
-                    const isRevealed = phase === 'revealed'
-                    const isCorrect = answer.is_correct
-
-                    return (
-                      <div key={answer.id} className={`flex items-center justify-between px-4 py-3 rounded-xl border ${
-                        isRevealed
-                          ? isCorrect === true ? 'border-emerald-200 bg-emerald-50'
-                            : isCorrect === false ? 'border-red-200 bg-red-50'
-                            : 'border-gray-200 bg-gray-50'
-                          : 'border-gray-200 bg-gray-50'
-                      }`}>
-                        <div className="flex items-center gap-3">
-                          <span className={`text-lg ${
-                            isRevealed
-                              ? isCorrect === true ? '✅' : isCorrect === false ? '❌' : '⏳'
-                              : '📝'
-                          }`}>
-                            {isRevealed ? (isCorrect === true ? '✅' : isCorrect === false ? '❌' : '⏳') : '📝'}
-                          </span>
-                          <div>
-                            <p className="font-medium text-gray-800 text-sm">{name}</p>
-                            {currentQ.type === 'short' && (
-                              <p className="text-xs text-gray-500">{answer.content}</p>
-                            )}
-                            {currentQ.type === 'multiple' && isRevealed && (
-                              <p className="text-xs text-gray-500">
-                                선택: {currentQ.options?.[parseInt(answer.content)] ?? answer.content}
-                              </p>
-                            )}
-                          </div>
-                        </div>
-
-                        {/* 주관식: 수동 채점 버튼 */}
-                        {currentQ.type === 'short' && phase === 'revealed' && isCorrect === null && (
-                          <div className="flex gap-2">
-                            <button
-                              onClick={() => handleGrade(answer, true)}
-                              disabled={gradingAnswerId === answer.id}
-                              className="px-3 py-1.5 bg-emerald-500 hover:bg-emerald-600 text-white text-xs rounded-lg font-bold disabled:opacity-50"
-                            >
-                              O 정답
-                            </button>
-                            <button
-                              onClick={() => handleGrade(answer, false)}
-                              disabled={gradingAnswerId === answer.id}
-                              className="px-3 py-1.5 bg-red-500 hover:bg-red-600 text-white text-xs rounded-lg font-bold disabled:opacity-50"
-                            >
-                              X 오답
-                            </button>
-                          </div>
-                        )}
+              {/* 미제출 목록 */}
+              {answerFilter === 'not-submitted' && (
+                notSubmitted.length === 0 ? (
+                  <p className="text-center text-gray-400 py-6 text-sm">
+                    {phase === 'revealed' ? '모두 제출했습니다!' : '아직 대기 중...'}
+                  </p>
+                ) : (
+                  <div className="space-y-2">
+                    {notSubmitted.map(p => (
+                      <div key={p.student_id} className="flex items-center gap-3 px-4 py-3 rounded-xl border border-gray-200 bg-gray-50">
+                        <span className="w-2 h-2 bg-gray-300 rounded-full shrink-0" />
+                        <p className="font-medium text-gray-500 text-sm">{(p.users as any)?.name ?? '알 수 없음'}</p>
                       </div>
-                    )
-                  })}
-                </div>
+                    ))}
+                  </div>
+                )
               )}
+
+              {/* 제출 / 정답 / 오답 목록 */}
+              {answerFilter !== 'not-submitted' && (() => {
+                const filtered = answerFilter === 'submitted'
+                  ? answers
+                  : answerFilter === 'correct'
+                  ? answers.filter(a => a.is_correct === true)
+                  : answers.filter(a => a.is_correct !== true)
+
+                if (filtered.length === 0) {
+                  return <p className="text-center text-gray-400 py-6 text-sm">해당 학생이 없습니다.</p>
+                }
+
+                return (
+                  <div className="space-y-2">
+                    {filtered.map(answer => {
+                      const name = (answer.users as any)?.name ?? '알 수 없음'
+                      const isRevealed = phase === 'revealed'
+                      const isCorrect = answer.is_correct
+
+                      const rowColor = isRevealed
+                        ? isCorrect === true ? 'border-emerald-200 bg-emerald-50'
+                          : isCorrect === false ? 'border-red-200 bg-red-50'
+                          : 'border-amber-200 bg-amber-50'
+                        : 'border-gray-200 bg-gray-50'
+
+                      const statusIcon = isRevealed
+                        ? isCorrect === true ? (
+                          <span className="w-5 h-5 rounded-full bg-emerald-500 text-white text-xs flex items-center justify-center font-bold shrink-0">✓</span>
+                        ) : isCorrect === false ? (
+                          <span className="w-5 h-5 rounded-full bg-red-400 text-white text-xs flex items-center justify-center font-bold shrink-0">✕</span>
+                        ) : (
+                          <span className="w-5 h-5 rounded-full bg-amber-300 text-white text-xs flex items-center justify-center font-bold shrink-0">?</span>
+                        )
+                        : <span className="w-2 h-2 bg-indigo-400 rounded-full shrink-0" />
+
+                      return (
+                        <div key={answer.id} className={`flex items-center justify-between px-4 py-3 rounded-xl border ${rowColor}`}>
+                          <div className="flex items-center gap-3">
+                            {statusIcon}
+                            <div>
+                              <p className="font-medium text-gray-800 text-sm">{name}</p>
+                              {currentQ.type === 'short' && (
+                                <p className="text-xs text-gray-500 mt-0.5">{answer.content}</p>
+                              )}
+                              {currentQ.type === 'multiple' && isRevealed && (
+                                <p className="text-xs text-gray-500 mt-0.5">
+                                  {currentQ.options?.[parseInt(answer.content)] ?? answer.content}
+                                </p>
+                              )}
+                            </div>
+                          </div>
+
+                          {currentQ.type === 'short' && phase === 'revealed' && isCorrect === null && (
+                            <div className="flex gap-2">
+                              <button onClick={() => handleGrade(answer, true)} disabled={gradingAnswerId === answer.id}
+                                className="px-3 py-1.5 bg-emerald-500 hover:bg-emerald-600 text-white text-xs rounded-lg font-bold disabled:opacity-50">
+                                O 정답
+                              </button>
+                              <button onClick={() => handleGrade(answer, false)} disabled={gradingAnswerId === answer.id}
+                                className="px-3 py-1.5 bg-red-500 hover:bg-red-600 text-white text-xs rounded-lg font-bold disabled:opacity-50">
+                                X 오답
+                              </button>
+                            </div>
+                          )}
+                        </div>
+                      )
+                    })}
+                  </div>
+                )
+              })()}
             </div>
 
             {/* 컨트롤 버튼 */}
@@ -691,6 +761,35 @@ export default function SessionClient({ quizzes, initialSession }: Props) {
           </>
         )}
       </div>
+
+      {/* 현재 랭킹 모달 */}
+      {showRanking && (
+        <Modal title="현재 세션 랭킹" onClose={() => setShowRanking(false)} size="sm">
+          {rankingLoading ? (
+            <p className="text-center text-gray-400 py-8">불러오는 중...</p>
+          ) : rankingData.length === 0 ? (
+            <p className="text-center text-gray-400 py-8">아직 데이터가 없습니다.</p>
+          ) : (
+            <ul className="space-y-2">
+              {rankingData.map((r, i) => {
+                const rankColor = i === 0 ? 'bg-yellow-400 text-white'
+                  : i === 1 ? 'bg-gray-300 text-white'
+                  : i === 2 ? 'bg-amber-500 text-white'
+                  : 'bg-gray-100 text-gray-500'
+                return (
+                  <li key={r.student_id} className="flex items-center gap-3 px-4 py-3 rounded-xl bg-gray-50 border border-gray-100">
+                    <span className={`w-7 h-7 rounded-full flex items-center justify-center text-xs font-black shrink-0 ${rankColor}`}>
+                      {i + 1}
+                    </span>
+                    <span className="flex-1 font-medium text-gray-800 text-sm">{r.name}</span>
+                    <span className="font-black text-indigo-600 text-sm">{r.points}P</span>
+                  </li>
+                )
+              })}
+            </ul>
+          )}
+        </Modal>
+      )}
 
       {toast && <Toast message={toast.msg} type={toast.type} onClose={clearToast} />}
     </div>
