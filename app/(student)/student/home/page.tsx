@@ -37,36 +37,44 @@ export default function StudentHomePage() {
   return (
     <main className="min-h-screen flex flex-col bg-emerald-50 safe-top safe-bottom">
       {/* 헤더 */}
-      <div className="bg-emerald-500 text-white px-6 pt-10 pb-8 text-center">
+      <div className="bg-gradient-to-br from-emerald-500 to-emerald-600 text-white px-6 pt-10 pb-10 text-center">
         <div className="text-5xl mb-3">👋</div>
         <h1 className="text-2xl font-bold">{student?.name}님, 안녕하세요!</h1>
-        <p className="text-emerald-100 mt-1 text-sm">
-          총 포인트: <span className="font-bold text-white">{student?.total_points.toLocaleString()}P</span>
-        </p>
+        <div className="mt-3 inline-flex items-center gap-2 bg-white/20 rounded-2xl px-4 py-2">
+          <span className="text-emerald-100 text-sm">누적 포인트</span>
+          <span className="font-black text-white text-xl">{student?.total_points.toLocaleString()}P</span>
+        </div>
       </div>
 
       {/* 메뉴 */}
-      <div className="flex-1 flex flex-col gap-4 p-6 max-w-sm mx-auto w-full mt-4">
+      <div className="flex-1 flex flex-col gap-4 p-6 max-w-sm mx-auto w-full -mt-4">
+        {/* 세션 입장 - 강조 카드 */}
         <Link
           href="/student/join"
-          className="flex items-center gap-5 bg-white rounded-2xl border-2 border-emerald-400 p-6 shadow-sm hover:bg-emerald-50 active:bg-emerald-100 transition-colors"
+          className="flex items-center gap-5 bg-white rounded-2xl border-2 border-emerald-400 p-6 shadow-md hover:bg-emerald-50 active:bg-emerald-100 active:scale-[0.98] transition-all duration-75"
         >
-          <span className="text-4xl">🎯</span>
-          <div>
+          <div className="w-14 h-14 bg-emerald-100 rounded-2xl flex items-center justify-center shrink-0">
+            <span className="text-3xl">🎯</span>
+          </div>
+          <div className="flex-1">
             <p className="text-lg font-bold text-gray-800">세션 입장</p>
             <p className="text-sm text-gray-500">선생님이 알려준 코드 입력</p>
           </div>
+          <span className="text-emerald-400 text-xl">→</span>
         </Link>
 
         <Link
           href="/student/profile"
-          className="flex items-center gap-5 bg-white rounded-2xl border border-gray-200 p-6 shadow-sm hover:bg-gray-50 active:bg-gray-100 transition-colors"
+          className="flex items-center gap-5 bg-white rounded-2xl border border-gray-200 p-6 shadow-sm hover:bg-gray-50 active:bg-gray-100 active:scale-[0.98] transition-all duration-75"
         >
-          <span className="text-4xl">📊</span>
-          <div>
+          <div className="w-14 h-14 bg-indigo-50 rounded-2xl flex items-center justify-center shrink-0">
+            <span className="text-3xl">📊</span>
+          </div>
+          <div className="flex-1">
             <p className="text-lg font-bold text-gray-800">내 프로필</p>
             <p className="text-sm text-gray-500">포인트 및 반 랭킹 확인</p>
           </div>
+          <span className="text-gray-300 text-xl">→</span>
         </Link>
       </div>
 
@@ -74,7 +82,7 @@ export default function StudentHomePage() {
       <div className="px-6 pb-8 text-center">
         <button
           onClick={handleLogout}
-          className="text-sm text-gray-400 hover:text-gray-600 underline"
+          className="text-sm text-gray-400 hover:text-gray-600 transition-colors"
         >
           로그아웃
         </button>

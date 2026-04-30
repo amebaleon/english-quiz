@@ -48,6 +48,7 @@ export default function SessionClient({ quizzes, initialSession }: Props) {
   const [origin, setOrigin] = useState('')
   const supabase = createClient()
   const channelRef = useRef<ReturnType<typeof supabase.channel> | null>(null)
+  const actionsRef = useRef({ phase: 'idle' as Phase, loading: false, handleReveal: () => {}, handleNextQuestion: () => {} })
 
   // 참가자 목록 로드
   const loadParticipants = useCallback(async (sessionId: string) => {
@@ -130,6 +131,24 @@ export default function SessionClient({ quizzes, initialSession }: Props) {
   }, [supabase, loadParticipants])
 
   useEffect(() => { setOrigin(window.location.origin) }, [])
+
+  // 키보드 단축키: Space/→ = 정답공개 or 다음문제
+  actionsRef.current = { phase, loading, handleReveal, handleNextQuestion }
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      if (e.repeat) return
+      if (e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement || e.target instanceof HTMLSelectElement) return
+      const { phase, loading, handleReveal, handleNextQuestion } = actionsRef.current
+      if (loading) return
+      if (e.key === ' ' || e.key === 'ArrowRight') {
+        e.preventDefault()
+        if (phase === 'question') handleReveal()
+        else if (phase === 'revealed') handleNextQuestion()
+      }
+    }
+    window.addEventListener('keydown', onKey)
+    return () => window.removeEventListener('keydown', onKey)
+  }, []) // eslint-disable-line react-hooks/exhaustive-deps
 
   // 초기 세션 복원
   useEffect(() => {
@@ -460,10 +479,16 @@ export default function SessionClient({ quizzes, initialSession }: Props) {
 
         {/* 대기 중 */}
         {phase === 'waiting' && (
-          <div className="bg-white rounded-2xl border border-gray-200 p-10 text-center">
-            <p className="text-4xl mb-4">⏳</p>
-            <h3 className="text-xl font-bold text-gray-800 mb-2">학생 입장 대기 중</h3>
-            <p className="text-gray-400 mb-6">{participants.length}명 입장 완료</p>
+          <div className="bg-white rounded-2xl border border-gray-200 p-10 text-center animate-fade-in">
+            <div className="flex justify-center gap-1.5 mb-5">
+              {[0,1,2].map(i => (
+                <div key={i} className="w-2.5 h-2.5 bg-indigo-400 rounded-full animate-bounce" style={{ animationDelay: `${i * 0.15}s` }} />
+              ))}
+            </div>
+            <h3 className="text-xl font-bold text-gray-800 mb-1">학생 입장 대기 중</h3>
+            <p className={`text-2xl font-black mb-6 ${participants.length > 0 ? 'text-indigo-600' : 'text-gray-300'}`}>
+              {participants.length}명 입장
+            </p>
             <button
               onClick={handleStartQuiz}
               disabled={loading || questions.length === 0}
@@ -492,9 +517,14 @@ export default function SessionClient({ quizzes, initialSession }: Props) {
                 <span className="bg-gray-100 text-gray-500 text-xs px-3 py-1 rounded-full">
                   {currentQ.type === 'multiple' ? '객관식' : '주관식'}
                 </span>
-                <span className="ml-auto text-sm text-gray-400">
-                  {submittedCount}명 제출 / {participants.length}명 참가
-                </span>
+                <div className="ml-auto flex items-center gap-2">
+                  {submittedCount > 0 && submittedCount === participants.length && participants.length > 0 && (
+                    <span className="text-xs bg-emerald-100 text-emerald-700 font-bold px-2 py-0.5 rounded-full animate-fade-in">
+                      ✓ 모두 제출!
+                    </span>
+                  )}
+                  <span className="text-sm text-gray-400">{submittedCount}/{participants.length}명</span>
+                </div>
               </div>
 
               <p className="text-xl font-semibold text-gray-800 leading-relaxed mb-4">
@@ -530,19 +560,33 @@ export default function SessionClient({ quizzes, initialSession }: Props) {
 
             {/* 답변 현황 */}
             <div className="bg-white rounded-2xl border border-gray-200 p-5">
-              <div className="flex items-center justify-between mb-4">
+              <div className="flex items-center justify-between mb-3">
                 <h4 className="font-semibold text-gray-700">답변 현황</h4>
-                <div className="text-right">
-                  {phase === 'revealed' && submittedCount > 0 && (
-                    <p className="text-sm font-semibold text-emerald-600">
-                      정답 {correctCount}명 ({Math.round(correctCount / submittedCount * 100)}%) / {submittedCount}명 제출
-                    </p>
-                  )}
+                {phase === 'revealed' && submittedCount > 0 && (
+                  <p className="text-sm font-semibold text-emerald-600">
+                    정답 {correctCount}명 ({Math.round(correctCount / submittedCount * 100)}%)
+                  </p>
+                )}
+              </div>
+
+              {/* 제출 진행바 */}
+              {participants.length > 0 && (
+                <div className="mb-4">
+                  <div className="w-full bg-gray-100 rounded-full h-2.5 overflow-hidden">
+                    <div
+                      className={`h-2.5 rounded-full transition-all duration-500 ${
+                        submittedCount === participants.length && participants.length > 0
+                          ? 'bg-emerald-500' : 'bg-indigo-400'
+                      }`}
+                      style={{ width: `${participants.length > 0 ? Math.round(submittedCount / participants.length * 100) : 0}%` }}
+                    />
+                  </div>
                   {phase === 'question' && notSubmitted.length > 0 && (
-                    <p className="text-xs text-amber-500">미제출 {notSubmitted.length}명: {notSubmitted.map(p => (p.users as any)?.name).join(', ')}</p>
+                    <p className="text-xs text-amber-500 mt-1">미제출: {notSubmitted.map(p => (p.users as any)?.name).join(', ')}</p>
                   )}
                 </div>
-              </div>
+              )}
+
 
               {answers.length === 0 ? (
                 <p className="text-center text-gray-400 py-6 text-sm">아직 제출한 학생이 없습니다.</p>
@@ -609,34 +653,39 @@ export default function SessionClient({ quizzes, initialSession }: Props) {
             </div>
 
             {/* 컨트롤 버튼 */}
-            <div className="flex gap-3">
-              {phase === 'question' && (
-                <>
-                  <button
-                    onClick={handleReveal}
-                    disabled={loading}
-                    className="flex-1 py-4 bg-amber-500 hover:bg-amber-600 disabled:bg-amber-300 text-white font-bold text-lg rounded-2xl transition-colors"
-                  >
-                    {loading ? '처리 중...' : '정답 공개'}
-                  </button>
+            <div className="space-y-2">
+              <div className="flex gap-3">
+                {phase === 'question' && (
+                  <>
+                    <button
+                      onClick={handleReveal}
+                      disabled={loading}
+                      className="flex-1 py-4 bg-amber-500 hover:bg-amber-600 disabled:bg-amber-300 text-white font-bold text-lg rounded-2xl transition-colors"
+                    >
+                      {loading ? '처리 중...' : '정답 공개'}
+                    </button>
+                    <button
+                      onClick={handleNextQuestion}
+                      disabled={loading}
+                      title="채점 없이 다음 문제로"
+                      className="px-5 py-4 border-2 border-gray-300 text-gray-500 hover:bg-gray-50 font-semibold rounded-2xl transition-colors text-sm"
+                    >
+                      건너뛰기
+                    </button>
+                  </>
+                )}
+                {phase === 'revealed' && (
                   <button
                     onClick={handleNextQuestion}
                     disabled={loading}
-                    title="채점 없이 다음 문제로"
-                    className="px-5 py-4 border-2 border-gray-300 text-gray-500 hover:bg-gray-50 font-semibold rounded-2xl transition-colors text-sm"
+                    className="flex-1 py-4 bg-indigo-600 hover:bg-indigo-700 disabled:bg-indigo-300 text-white font-bold text-lg rounded-2xl transition-colors"
                   >
-                    건너뛰기
+                    {loading ? '이동 중...' : qIdx + 1 >= questions.length ? '세션 종료' : '다음 문제 →'}
                   </button>
-                </>
-              )}
-              {phase === 'revealed' && (
-                <button
-                  onClick={handleNextQuestion}
-                  disabled={loading}
-                  className="flex-1 py-4 bg-indigo-600 hover:bg-indigo-700 disabled:bg-indigo-300 text-white font-bold text-lg rounded-2xl transition-colors"
-                >
-                  {loading ? '이동 중...' : qIdx + 1 >= questions.length ? '세션 종료' : '다음 문제 →'}
-                </button>
+                )}
+              </div>
+              {(phase === 'question' || phase === 'revealed') && (
+                <p className="text-xs text-gray-300 text-center">Space / → 키로 진행</p>
               )}
             </div>
           </>

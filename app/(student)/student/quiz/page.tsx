@@ -159,9 +159,20 @@ function QuizContent() {
   if (!data || data.session.status === 'waiting' || data.session.current_question_index < 0) {
     return (
       <div className="min-h-screen flex flex-col items-center justify-center bg-emerald-50 p-6 safe-top safe-bottom text-center">
-        <div className="text-6xl mb-6 animate-pulse">⏳</div>
+        <div className="relative mb-6">
+          <div className="text-7xl animate-bounce">⏳</div>
+        </div>
         <h2 className="text-2xl font-bold text-gray-800 mb-2">선생님을 기다리는 중</h2>
-        <p className="text-gray-500">퀴즈가 곧 시작됩니다!</p>
+        <p className="text-gray-400 mb-6">퀴즈가 곧 시작됩니다!</p>
+        <div className="flex gap-1.5">
+          {[0, 1, 2].map(i => (
+            <div
+              key={i}
+              className="w-2 h-2 bg-emerald-400 rounded-full animate-bounce"
+              style={{ animationDelay: `${i * 0.15}s` }}
+            />
+          ))}
+        </div>
       </div>
     )
   }
@@ -190,10 +201,10 @@ function QuizContent() {
 
     return (
       <div className="min-h-screen flex flex-col items-center justify-center bg-emerald-50 p-6 safe-top safe-bottom text-center">
-        <div className={`w-full max-w-sm rounded-2xl border-2 ${border} ${bg} p-8 mb-6`}>
-          <div className="text-6xl mb-4">{icon}</div>
-          <h2 className="text-2xl font-bold text-gray-800 mb-1">{title}</h2>
-          <p className="text-gray-500 text-sm">{subtitle}</p>
+        <div className={`w-full max-w-sm rounded-2xl border-2 ${border} ${bg} p-8 mb-6 animate-bounce-in`}>
+          <div className={`text-6xl mb-4 ${isCorrect === true ? 'animate-bounce-in' : ''}`}>{icon}</div>
+          <h2 className={`text-2xl font-bold mb-1 ${isCorrect === true ? 'text-emerald-700' : isCorrect === false ? 'text-red-600' : 'text-gray-800'}`}>{title}</h2>
+          <p className={`text-sm font-semibold ${isCorrect === true ? 'text-emerald-600' : 'text-gray-500'}`}>{subtitle}</p>
         </div>
 
         {q?.answer && (
@@ -278,8 +289,8 @@ function QuizContent() {
   if (submitted) {
     return (
       <div className="min-h-screen flex flex-col items-center justify-center bg-emerald-50 p-6 safe-top safe-bottom text-center">
-        <div className="text-6xl mb-6">✅</div>
-        <h2 className="text-2xl font-bold text-gray-800 mb-2">제출 완료!</h2>
+        <div className="text-6xl mb-6 animate-bounce-in">✅</div>
+        <h2 className="text-2xl font-bold text-gray-800 mb-2 animate-fade-in">제출 완료!</h2>
         <p className="text-gray-500 mb-6">선생님의 채점을 기다리세요</p>
         <div className="bg-white rounded-2xl border border-gray-200 px-6 py-4 max-w-xs w-full">
           <p className="text-xs text-gray-400 mb-1">{data.session.current_question_index + 1}번 문제</p>
